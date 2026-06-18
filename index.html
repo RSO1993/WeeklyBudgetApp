@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>الميزانية الذكية</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
         
@@ -15,23 +16,13 @@
             color: #292524;
         }
 
-        /* لفرض الأرقام الإنجليزية 1 2 3 دائماً */
+        /* لفرض الأرقام الإنجليزية دائماً */
         .force-english-numbers, input[type="number"] {
             font-family: system-ui, -apple-system, sans-serif !important;
             direction: ltr;
         }
         
         input[type="number"] { text-align: center; }
-
-        .tile-c0 { background-color: #fb923c; color: white; }
-        .tile-c1 { background-color: #14b8a6; color: white; }
-        .tile-c2 { background-color: #fbbf24; color: #451a03; }
-        .tile-c3 { background-color: #818cf8; color: white; }
-
-        .btn-c0 { background-color: #ea580c; color: white; }
-        .btn-c1 { background-color: #0d9488; color: white; }
-        .btn-c2 { background-color: #d97706; color: white; }
-        .btn-c3 { background-color: #4f46e5; color: white; }
 
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
@@ -77,27 +68,17 @@
                 </div>
 
                 <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
-                    <label class="block text-sm font-bold text-stone-700 mb-1">
-                        تحديد الفئات ونسبة كل منها
-                        <span class="text-xs font-normal text-stone-500 mr-2">(المجموع: <span id="display-pct-total" class="font-bold text-blue-600 force-english-numbers">100%</span>)</span>
-                    </label>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-sm font-bold text-stone-700">
+                            تحديد الفئات (الأظرف)
+                            <span class="text-xs font-normal text-stone-500 mr-2">(المجموع: <span id="display-pct-total" class="font-bold text-blue-600 force-english-numbers">100%</span>)</span>
+                        </label>
+                        <button id="btn-add-category" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition">+ إضافة فئة</button>
+                    </div>
                     <p class="text-xs text-stone-500 mb-4">يجب أن يكون مجموع النسب 100%.</p>
                     
-                    <div class="flex gap-2 mb-3">
-                        <input type="text" id="cat-name-0" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold" value="مقاضي">
-                        <input type="number" id="cat-pct-0" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold text-orange-600 force-english-numbers" value="30">
-                    </div>
-                    <div class="flex gap-2 mb-3">
-                        <input type="text" id="cat-name-1" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold" value="العائلة">
-                        <input type="number" id="cat-pct-1" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-teal-600 force-english-numbers" value="30">
-                    </div>
-                    <div class="flex gap-2 mb-3">
-                        <input type="text" id="cat-name-2" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 font-bold" value="مصاريف شخصية">
-                        <input type="number" id="cat-pct-2" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 font-bold text-amber-600 force-english-numbers" value="30">
-                    </div>
-                    <div class="flex gap-2 mb-3">
-                        <input type="text" id="cat-name-3" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 font-bold" value="ترفيه">
-                        <input type="number" id="cat-pct-3" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 font-bold text-indigo-600 force-english-numbers" value="10">
+                    <div id="categories-list" class="space-y-3">
+                        <!-- سيتم توليد الفئات هنا -->
                     </div>
                     
                     <div id="setup-error" class="hidden text-red-500 text-sm font-bold mt-2 text-center"></div>
@@ -146,28 +127,9 @@
                     </div>
                 </div>
 
-                <!-- مربعات الفئات -->
+                <!-- مربعات الفئات الديناميكية -->
                 <div class="grid grid-cols-2 gap-4 mb-6" id="tiles-grid">
-                    <div class="tile-c0 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
-                        <span id="tile-name-0" class="text-sm font-bold text-center">فئة 1</span>
-                        <span id="tile-val-0" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-0" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
-                    </div>
-                    <div class="tile-c1 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
-                        <span id="tile-name-1" class="text-sm font-bold text-center">فئة 2</span>
-                        <span id="tile-val-1" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-1" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
-                    </div>
-                    <div class="tile-c2 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
-                        <span id="tile-name-2" class="text-sm font-bold text-center">فئة 3</span>
-                        <span id="tile-val-2" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-2" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
-                    </div>
-                    <div class="tile-c3 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
-                        <span id="tile-name-3" class="text-sm font-bold text-center">فئة 4</span>
-                        <span id="tile-val-3" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-3" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
-                    </div>
+                    <!-- سيتم حقن الأظرف هنا -->
                 </div>
 
                 <!-- تسجيل المصروفات -->
@@ -176,13 +138,10 @@
                         <input type="number" id="input-expense" class="w-2/3 text-center text-4xl font-bold text-stone-800 border-b-2 border-stone-200 focus:border-stone-800 focus:outline-none pb-2 bg-transparent transition-colors force-english-numbers" placeholder="0.00">
                         <span class="text-2xl text-stone-400 font-bold border-b-2 border-transparent pb-2">د.ك</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="btn-spend-0" class="btn-c0 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
-                        <button id="btn-spend-1" class="btn-c1 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
-                        <button id="btn-spend-2" class="btn-c2 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
-                        <button id="btn-spend-3" class="btn-c3 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
+                    <div class="grid grid-cols-2 gap-3" id="spend-buttons-container">
+                        <!-- أزرار الخصم ستظهر هنا -->
                     </div>
-                    <!-- رسالة التأكيد الحمراء الرفيعة -->
+                    <!-- رسالة التأكيد -->
                     <div id="toast-message" class="text-red-500 text-sm font-bold mt-4 text-center h-5 transition-opacity duration-300 opacity-0 force-english-numbers">
                         تم تسجيل العملية بنجاح
                     </div>
@@ -202,7 +161,6 @@
         <!-- شاشة القبو (المحفظة والتقارير والصناديق) -->
         <div id="vault-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             
-            <!-- الصندوق العلوي (إجمالي المدخرات والمصروفات) -->
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
                 <h2 class="text-lg text-stone-300 mb-1">إجمالي المدخرات (القبو)</h2>
                 <div class="text-4xl font-bold text-green-400 force-english-numbers mb-2" id="vault-total-saved">0.00 د.ك</div>
@@ -214,7 +172,6 @@
             
             <div class="flex-1 overflow-y-auto p-4">
                 
-                <!-- أزرار التنقل أو بدء دورة جديدة -->
                 <button id="btn-vault-back" class="w-full bg-stone-200 text-stone-800 font-bold py-3 rounded-xl mb-4 hover:bg-stone-300 transition">العودة للميزانية الحالية</button>
                 <button id="btn-start-new-cycle" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg mb-6 hover:bg-blue-700 transition hidden text-lg border-2 border-blue-500">بدء دورة جديدة 🚀</button>
 
@@ -230,12 +187,9 @@
                         <span id="vault-unallocated" class="text-lg font-bold text-green-600 force-english-numbers">0.00 د.ك</span>
                     </div>
 
-                    <div id="allocations-list" class="space-y-3">
-                        <!-- الصناديق ستظهر هنا -->
-                    </div>
+                    <div id="allocations-list" class="space-y-3"></div>
                 </div>
 
-                <!-- زر إغلاق الدورة -->
                 <button id="btn-close-cycle" class="w-full bg-stone-800 text-white font-bold py-4 rounded-xl shadow-lg mb-8 hover:bg-stone-700 transition text-lg border-2 border-green-500">
                     إغلاق الدورة الحالية وترحيل المتبقي 💰
                 </button>
@@ -245,7 +199,7 @@
             </div>
         </div>
 
-        <!-- نافذة منبثقة (Modal) مخصصة بدلاً من رسائل المتصفح المزعجة -->
+        <!-- نافذة منبثقة (Modal) -->
         <div id="custom-modal" class="absolute inset-0 bg-stone-900 bg-opacity-60 hidden flex justify-center items-center z-50 p-4">
             <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm">
                 <h3 id="modal-title" class="text-xl font-bold text-stone-800 mb-2"></h3>
@@ -266,23 +220,25 @@
         let activeWeekIndex = 0;
         let modalCallback = null;
 
-        // دوال النافذة المنبثقة (Modal)
+        // مكتبة ألوان الفئات الديناميكية
+        const catStyles = [
+            { tile: 'bg-orange-400 text-white', btn: 'bg-orange-600 text-white', hex: '#fb923c' },
+            { tile: 'bg-teal-500 text-white', btn: 'bg-teal-600 text-white', hex: '#14b8a6' },
+            { tile: 'bg-amber-400 text-amber-900', btn: 'bg-amber-500 text-white', hex: '#fbbf24' },
+            { tile: 'bg-indigo-400 text-white', btn: 'bg-indigo-500 text-white', hex: '#818cf8' },
+            { tile: 'bg-rose-400 text-white', btn: 'bg-rose-600 text-white', hex: '#fb7185' },
+            { tile: 'bg-cyan-500 text-white', btn: 'bg-cyan-600 text-white', hex: '#06b6d4' },
+            { tile: 'bg-fuchsia-400 text-white', btn: 'bg-fuchsia-600 text-white', hex: '#e879f9' },
+            { tile: 'bg-lime-400 text-lime-900', btn: 'bg-lime-600 text-white', hex: '#a3e635' }
+        ];
+
         function showModal(title, message, isPrompt, defaultValue, callback) {
             document.getElementById('custom-modal').classList.remove('hidden');
             document.getElementById('modal-title').innerText = title;
-            
             const msgEl = document.getElementById('modal-message');
-            if(message) { msgEl.innerText = message; msgEl.classList.remove('hidden'); }
-            else { msgEl.classList.add('hidden'); }
-            
+            if(message) { msgEl.innerText = message; msgEl.classList.remove('hidden'); } else { msgEl.classList.add('hidden'); }
             const inputEl = document.getElementById('modal-input');
-            if(isPrompt) { 
-                inputEl.value = defaultValue || ''; 
-                inputEl.classList.remove('hidden'); 
-                inputEl.focus();
-            }
-            else { inputEl.classList.add('hidden'); }
-            
+            if(isPrompt) { inputEl.value = defaultValue || ''; inputEl.classList.remove('hidden'); inputEl.focus(); } else { inputEl.classList.add('hidden'); }
             modalCallback = callback;
         }
 
@@ -307,19 +263,22 @@
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 appState = JSON.parse(saved);
-                
                 if (appState.cycleActive === undefined) appState.cycleActive = true; 
                 if (!appState.allTimeSpent) appState.allTimeSpent = 0;
                 if (!appState.vaultAllocations) appState.vaultAllocations = [];
 
-                if (appState.cycleActive) {
-                    showDashboard();
-                } else {
-                    showVault();
-                }
+                if (appState.cycleActive) showDashboard();
+                else showVault();
             } else {
                 addDeductibleRowToDOM('', '');
                 document.getElementById('input-cycle-start').valueAsDate = new Date();
+                
+                // إضافة 4 فئات افتراضية للمستخدم الجديد
+                addCategoryRowToDOM(null, 'مقاضي', 30);
+                addCategoryRowToDOM(null, 'العائلة', 30);
+                addCategoryRowToDOM(null, 'مصاريف شخصية', 30);
+                addCategoryRowToDOM(null, 'ترفيه', 10);
+                
                 showSetup();
             }
             attachListeners();
@@ -341,11 +300,8 @@
             const pctEl = document.getElementById('display-pct-total');
             pctEl.innerText = totalPct + '%';
             
-            if(totalPct === 100) {
-                pctEl.className = 'font-bold text-blue-600 force-english-numbers';
-            } else {
-                pctEl.className = 'font-bold text-red-500 force-english-numbers';
-            }
+            if(totalPct === 100) pctEl.className = 'font-bold text-blue-600 force-english-numbers';
+            else pctEl.className = 'font-bold text-red-500 force-english-numbers';
         }
 
         function showSetup() { 
@@ -354,22 +310,10 @@
             updateFixedTotal();
             updatePctTotal();
         }
+        function showDashboard() { hideAll(); document.getElementById('dashboard-view').classList.remove('hidden'); renderDashboard(); }
+        function showTransactions() { hideAll(); document.getElementById('transactions-view').classList.remove('hidden'); renderTransactionsList(); }
+        function showVault() { hideAll(); document.getElementById('vault-view').classList.remove('hidden'); renderVault(); }
         
-        function showDashboard() { 
-            hideAll(); 
-            document.getElementById('dashboard-view').classList.remove('hidden'); 
-            renderDashboard(); 
-        }
-        function showTransactions() { 
-            hideAll(); 
-            document.getElementById('transactions-view').classList.remove('hidden'); 
-            renderTransactionsList(); 
-        }
-        function showVault() { 
-            hideAll(); 
-            document.getElementById('vault-view').classList.remove('hidden'); 
-            renderVault(); 
-        }
         function hideAll() {
             ['setup-view', 'dashboard-view', 'transactions-view', 'vault-view'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
@@ -385,15 +329,29 @@
                 <input type="number" class="deductible-amount w-24 p-3 border border-stone-300 rounded-lg focus:outline-none text-center force-english-numbers" placeholder="0" value="${amount}">
                 <button type="button" class="btn-remove-ded text-red-400 font-bold p-2">X</button>
             `;
-            
             div.querySelector('.deductible-amount').addEventListener('input', updateFixedTotal);
-            
-            div.querySelector('.btn-remove-ded').onclick = () => {
-                div.remove();
-                updateFixedTotal();
-            };
+            div.querySelector('.btn-remove-ded').onclick = () => { div.remove(); updateFixedTotal(); };
             container.appendChild(div);
             updateFixedTotal();
+        }
+
+        function addCategoryRowToDOM(id = null, name = '', pct = '') {
+            const container = document.getElementById('categories-list');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 category-row items-center';
+            // حفظ الـ ID في العنصر للرجوع له
+            div.dataset.id = id || Date.now().toString() + Math.random().toString(36).substr(2, 5);
+            
+            div.innerHTML = `
+                <input type="text" class="cat-name flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none font-bold" placeholder="اسم الفئة" value="${name}">
+                <input type="number" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none text-center font-bold text-blue-600 force-english-numbers" placeholder="%" value="${pct}">
+                <button type="button" class="btn-remove-cat text-red-400 font-bold p-2">X</button>
+            `;
+            
+            div.querySelector('.cat-pct-input').addEventListener('input', updatePctTotal);
+            div.querySelector('.btn-remove-cat').onclick = () => { div.remove(); updatePctTotal(); };
+            container.appendChild(div);
+            updatePctTotal();
         }
 
         function handleSetup() {
@@ -402,8 +360,7 @@
             
             let fixedTotal = 0;
             document.querySelectorAll('.deductible-row').forEach(row => {
-                const a = parseFloat(row.querySelector('.deductible-amount').value) || 0;
-                fixedTotal += a;
+                fixedTotal += parseFloat(row.querySelector('.deductible-amount').value) || 0;
             });
             
             let cats = [];
@@ -411,12 +368,13 @@
             const remaining = salary - fixedTotal;
             const weeklyTarget = remaining > 0 ? (remaining / 4) : 0;
 
-            for (let i = 0; i < 4; i++) {
-                const name = document.getElementById(`cat-name-${i}`).value || `فئة ${i+1}`;
-                const pct = parseFloat(document.getElementById(`cat-pct-${i}`).value) || 0;
+            document.querySelectorAll('.category-row').forEach(row => {
+                const id = row.dataset.id;
+                const name = row.querySelector('.cat-name').value || 'فئة';
+                const pct = parseFloat(row.querySelector('.cat-pct-input').value) || 0;
                 totalPct += pct;
-                cats.push({ id: i, name: name, pct: pct, weeklyAllowance: (pct / 100) * weeklyTarget });
-            }
+                cats.push({ id: id, name: name, pct: pct, weeklyAllowance: (pct / 100) * weeklyTarget });
+            });
 
             const err = document.getElementById('setup-error');
             if (totalPct !== 100) {
@@ -426,13 +384,7 @@
             err.classList.add('hidden');
 
             if (!appState) {
-                appState = { 
-                    transactions: [], 
-                    history: [], 
-                    vaultTotal: 0,
-                    allTimeSpent: 0,
-                    vaultAllocations: []
-                };
+                appState = { transactions: [], history: [], vaultTotal: 0, allTimeSpent: 0, vaultAllocations: [] };
             }
             
             appState.cycleDate = dateVal;
@@ -460,43 +412,55 @@
             let totalRollover = 0;
             let totalRemainingThisWeek = 0;
 
+            const tilesGrid = document.getElementById('tiles-grid');
+            tilesGrid.innerHTML = '';
+            const spendBtnsContainer = document.getElementById('spend-buttons-container');
+            spendBtnsContainer.innerHTML = '';
+
             appState.categories.forEach((cat, index) => {
                 let spentPreviousWeeks = 0;
                 let spentThisWeek = 0;
 
                 appState.transactions.forEach(tx => {
-                    if (tx.catId === cat.id) {
-                        if (tx.weekIndex < activeWeekIndex) {
-                            spentPreviousWeeks += tx.amount;
-                        } else if (tx.weekIndex === activeWeekIndex) {
-                            spentThisWeek += tx.amount;
-                        }
+                    // مقارنة معرف الفئة كنص دائماً
+                    if (tx.catId.toString() === cat.id.toString()) {
+                        if (tx.weekIndex < activeWeekIndex) spentPreviousWeeks += tx.amount;
+                        else if (tx.weekIndex === activeWeekIndex) spentThisWeek += tx.amount;
                     }
                 });
 
                 const allowancePreviousWeeks = cat.weeklyAllowance * activeWeekIndex;
                 const catRollover = allowancePreviousWeeks - spentPreviousWeeks;
-                
                 const catCurrentBal = cat.weeklyAllowance + catRollover - spentThisWeek;
                 
                 totalWeeklyBudget += cat.weeklyAllowance;
                 totalRollover += catRollover;
                 totalRemainingThisWeek += catCurrentBal;
                 
-                document.getElementById(`tile-name-${index}`).innerText = cat.name;
-                document.getElementById(`tile-val-${index}`).innerText = catCurrentBal.toFixed(2);
-                
+                const style = catStyles[index % catStyles.length];
                 let rolloverStr = (catRollover >= 0 ? '+' : '') + catRollover.toFixed(2);
-                document.getElementById(`tile-detail-${index}`).innerText = `المُرحّل: ${rolloverStr}`;
 
-                document.getElementById(`btn-spend-${index}`).innerText = cat.name;
+                // إنشاء الظرف
+                const tile = document.createElement('div');
+                tile.className = `${style.tile} rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105`;
+                tile.innerHTML = `
+                    <span class="text-sm font-bold text-center">${cat.name}</span>
+                    <span class="text-3xl font-bold text-center force-english-numbers mt-2">${catCurrentBal.toFixed(2)}</span>
+                    <span class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: ${rolloverStr}</span>
+                `;
+                tilesGrid.appendChild(tile);
+
+                // إنشاء زر الصرف
+                const btn = document.createElement('button');
+                btn.className = `${style.btn} font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95`;
+                btn.innerText = cat.name;
+                btn.onclick = () => processTransaction(cat.id);
+                spendBtnsContainer.appendChild(btn);
             });
 
             document.getElementById('display-weekly-budget').innerText = totalWeeklyBudget.toFixed(2);
-            
             let globalRolloverEl = document.getElementById('display-weekly-rollover');
-            let globalRolloverStr = (totalRollover >= 0 ? '+' : '') + totalRollover.toFixed(2);
-            globalRolloverEl.innerText = globalRolloverStr;
+            globalRolloverEl.innerText = (totalRollover >= 0 ? '+' : '') + totalRollover.toFixed(2);
             globalRolloverEl.className = `text-lg font-bold force-english-numbers ${totalRollover >= 0 ? 'text-teal-600' : 'text-red-500'}`;
 
             let globalRemainingEl = document.getElementById('display-weekly-remaining');
@@ -504,7 +468,7 @@
             globalRemainingEl.className = `text-lg font-bold force-english-numbers ${totalRemainingThisWeek >= 0 ? 'text-orange-500' : 'text-red-500'}`;
         }
 
-        function processTransaction(catIndex) {
+        function processTransaction(catId) {
             const inputEl = document.getElementById('input-expense');
             const amount = parseFloat(inputEl.value);
 
@@ -514,12 +478,12 @@
                 id: Date.now().toString(),
                 timestamp: Date.now(),
                 amount: amount,
-                catId: catIndex,
+                catId: catId.toString(),
                 weekIndex: activeWeekIndex
             });
             
-            const catName = appState.categories[catIndex].name;
-            showToast(`تم خصم ${amount.toFixed(2)} د.ك. من ${catName}`);
+            const catObj = appState.categories.find(c => c.id.toString() === catId.toString());
+            showToast(`تم خصم ${amount.toFixed(2)} د.ك. من ${catObj.name}`);
 
             inputEl.value = '';
             saveState();
@@ -530,11 +494,8 @@
             const toast = document.getElementById('toast-message');
             toast.innerText = msg;
             toast.classList.remove('opacity-0');
-            
             if(window.toastTimer) clearTimeout(window.toastTimer);
-            window.toastTimer = setTimeout(() => {
-                toast.classList.add('opacity-0');
-            }, 3000);
+            window.toastTimer = setTimeout(() => { toast.classList.add('opacity-0'); }, 3000);
         }
 
         function renderTransactionsList() {
@@ -543,7 +504,8 @@
             
             const sortedTx = [...appState.transactions].sort((a, b) => b.timestamp - a.timestamp);
             sortedTx.forEach(tx => {
-                const cat = appState.categories.find(c => c.id === tx.catId);
+                // البحث عن الفئة، وإذا كانت محذوفة نظهرها كمحذوفة
+                const cat = appState.categories.find(c => c.id.toString() === tx.catId.toString()) || { name: 'فئة محذوفة' };
                 const d = new Date(tx.timestamp);
                 const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
                 
@@ -587,27 +549,14 @@
                 const div = document.createElement('div');
                 div.className = 'flex gap-2 items-center bg-stone-50 p-2 rounded-lg border border-stone-200';
                 div.innerHTML = `
-                    <input type="text" class="alloc-name flex-1 p-2 bg-transparent text-sm font-bold text-stone-700 focus:outline-none placeholder-stone-400" value="${alloc.name}" placeholder="اسم الصندوق (مثال: استثمار)">
+                    <input type="text" class="alloc-name flex-1 p-2 bg-transparent text-sm font-bold text-stone-700 focus:outline-none placeholder-stone-400" value="${alloc.name}" placeholder="اسم الصندوق">
                     <input type="number" class="alloc-amount w-24 p-2 bg-white border border-stone-300 rounded text-sm text-center font-bold text-teal-700 force-english-numbers focus:outline-none focus:ring-1 focus:ring-teal-400" value="${alloc.amount}" placeholder="0">
                     <button class="btn-del-alloc text-red-400 hover:text-red-600 p-2 font-bold transition">X</button>
                 `;
                 
-                div.querySelector('.alloc-name').addEventListener('change', (e) => {
-                    alloc.name = e.target.value;
-                    saveState();
-                });
-                
-                div.querySelector('.alloc-amount').addEventListener('input', (e) => {
-                    alloc.amount = parseFloat(e.target.value) || 0;
-                    saveState();
-                    renderAllocations(); 
-                });
-                
-                div.querySelector('.btn-del-alloc').onclick = () => {
-                    appState.vaultAllocations = appState.vaultAllocations.filter(a => a.id !== alloc.id);
-                    saveState();
-                    renderAllocations();
-                };
+                div.querySelector('.alloc-name').addEventListener('change', (e) => { alloc.name = e.target.value; saveState(); });
+                div.querySelector('.alloc-amount').addEventListener('input', (e) => { alloc.amount = parseFloat(e.target.value) || 0; saveState(); renderAllocations(); });
+                div.querySelector('.btn-del-alloc').onclick = () => { appState.vaultAllocations = appState.vaultAllocations.filter(a => a.id !== alloc.id); saveState(); renderAllocations(); };
                 
                 listEl.appendChild(div);
             });
@@ -681,7 +630,6 @@
                         renderVault();
                     });
                 };
-                
                 listEl.appendChild(div);
             });
         }
@@ -689,7 +637,6 @@
         function closeCurrentCycle() {
             showModal("إنهاء الدورة", "هل أنت متأكد من إنهاء الدورة الحالية وترحيل المتبقي إلى القبو؟", false, null, (confirmed) => {
                 if(!confirmed) return;
-
                 if (!appState.history) appState.history = [];
 
                 const totalAllowance = appState.salary - appState.fixedTotal;
@@ -708,7 +655,6 @@
                 appState.transactions = [];
                 activeWeekIndex = 0;
                 appState.cycleDate = new Date().toISOString().split('T')[0];
-                
                 appState.cycleActive = false; 
                 
                 saveState();
@@ -719,17 +665,16 @@
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
 
         function attachListeners() {
-            document.querySelectorAll('.cat-pct-input').forEach(input => {
-                input.addEventListener('input', updatePctTotal);
-            });
-
             document.getElementById('btn-add-deductible').onclick = () => addDeductibleRowToDOM();
             
+            document.getElementById('btn-add-category').onclick = () => {
+                addCategoryRowToDOM(null, '', 0);
+            };
+
             document.getElementById('btn-add-allocation').onclick = () => {
                 if(!appState.vaultAllocations) appState.vaultAllocations = [];
                 appState.vaultAllocations.push({ id: Date.now().toString(), name: '', amount: 0 });
-                saveState();
-                renderAllocations();
+                saveState(); renderAllocations();
             };
 
             document.getElementById('btn-start').onclick = handleSetup;
@@ -739,11 +684,11 @@
                 document.getElementById('input-cycle-start').valueAsDate = new Date();
                 document.getElementById('btn-cancel-setup').classList.add('hidden'); 
                 
-                const container = document.getElementById('deductibles-list');
-                container.innerHTML = '';
-                if(appState.fixedTotal > 0) {
-                    addDeductibleRowToDOM('التزامات سابقة', appState.fixedTotal);
-                }
+                document.getElementById('deductibles-list').innerHTML = '';
+                if(appState.fixedTotal > 0) addDeductibleRowToDOM('التزامات سابقة', appState.fixedTotal);
+                
+                document.getElementById('categories-list').innerHTML = '';
+                appState.categories.forEach(c => addCategoryRowToDOM(c.id, c.name, c.pct));
                 
                 showSetup();
             };
@@ -752,31 +697,24 @@
                 document.getElementById('input-salary').value = appState.salary;
                 document.getElementById('btn-cancel-setup').classList.remove('hidden');
                 
-                const container = document.getElementById('deductibles-list');
-                container.innerHTML = '';
-                if(appState.fixedTotal > 0) {
-                    addDeductibleRowToDOM('التزامات سابقة', appState.fixedTotal);
-                }
+                document.getElementById('deductibles-list').innerHTML = '';
+                if(appState.fixedTotal > 0) addDeductibleRowToDOM('التزامات سابقة', appState.fixedTotal);
+                
+                document.getElementById('categories-list').innerHTML = '';
+                appState.categories.forEach(c => addCategoryRowToDOM(c.id, c.name, c.pct));
                 
                 showSetup();
             };
+            
             document.getElementById('btn-view-logs').onclick = showTransactions;
             document.getElementById('btn-close-logs').onclick = showDashboard;
             document.getElementById('btn-home').onclick = showVault;
             document.getElementById('btn-vault-back').onclick = showDashboard;
-            
             document.getElementById('btn-close-cycle').onclick = closeCurrentCycle;
             
             document.querySelectorAll('.week-tab').forEach(btn => {
-                btn.onclick = (e) => {
-                    activeWeekIndex = parseInt(e.target.dataset.week);
-                    renderDashboard();
-                };
+                btn.onclick = (e) => { activeWeekIndex = parseInt(e.target.dataset.week); renderDashboard(); };
             });
-
-            for (let i = 0; i < 4; i++) {
-                document.getElementById(`btn-spend-${i}`).onclick = () => processTransaction(i);
-            }
         }
 
         window.addEventListener('DOMContentLoaded', initApp);
