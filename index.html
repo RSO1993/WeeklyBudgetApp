@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الميزانية الذكية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #faf9f6; 
+            color: #292524;
+        }
+
+        /* لفرض الأرقام الإنجليزية 1 2 3 دائماً */
+        .force-english-numbers, input[type="number"] {
+            font-family: system-ui, -apple-system, sans-serif !important;
+            direction: ltr;
+        }
+        
+        input[type="number"] { text-align: center; }
+
+        .tile-c0 { background-color: #fb923c; color: white; }
+        .tile-c1 { background-color: #14b8a6; color: white; }
+        .tile-c2 { background-color: #fbbf24; color: #451a03; }
+        .tile-c3 { background-color: #818cf8; color: white; }
+
+        .btn-c0 { background-color: #ea580c; color: white; }
+        .btn-c1 { background-color: #0d9488; color: white; }
+        .btn-c2 { background-color: #d97706; color: white; }
+        .btn-c3 { background-color: #4f46e5; color: white; }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="flex justify-center min-h-screen selection:bg-stone-200">
+
+    <div id="app-container" class="w-full max-w-lg bg-white shadow-xl min-h-screen flex flex-col relative overflow-hidden">
+        
+        <div id="setup-view" class="flex-1 p-6 overflow-y-auto hidden">
+            <div class="mb-6 border-b border-stone-200 pb-4 flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-stone-800 mb-1">⚙️ إعداد الميزانية</h1>
+                <button id="btn-cancel-setup" class="hidden text-sm text-stone-500 hover:text-stone-800 font-bold bg-stone-100 px-3 py-2 rounded-lg transition">إلغاء</button>
+            </div>
+
+            <div class="space-y-5">
+                <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                    <label class="block text-sm font-bold text-stone-700 mb-1">تاريخ بداية الدورة (تاريخ نزول الراتب)</label>
+                    <input type="date" id="input-cycle-start" class="w-full p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400 text-lg font-bold force-english-numbers">
+                </div>
+
+                <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                    <label class="block text-sm font-bold text-stone-700 mb-1">الراتب الشهري</label>
+                    <input type="number" id="input-salary" class="w-full p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent text-lg force-english-numbers" placeholder="0.00">
+                </div>
+
+                <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-sm font-bold text-stone-700">
+                            الالتزامات الثابتة 
+                            <span class="text-xs font-normal text-stone-500 mr-2">(المجموع: <span id="display-fixed-total" class="font-bold text-red-500 force-english-numbers">0.00</span>)</span>
+                        </label>
+                        <button id="btn-add-deductible" class="text-xs font-bold text-teal-600 hover:text-teal-800 transition">+ إضافة التزام</button>
+                    </div>
+                    <div id="deductibles-list" class="space-y-2 mt-3"></div>
+                </div>
+
+                <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                    <label class="block text-sm font-bold text-stone-700 mb-1">
+                        تحديد الفئات ونسبة كل منها
+                        <span class="text-xs font-normal text-stone-500 mr-2">(المجموع: <span id="display-pct-total" class="font-bold text-blue-600 force-english-numbers">100%</span>)</span>
+                    </label>
+                    <p class="text-xs text-stone-500 mb-4">يجب أن يكون مجموع النسب 100%.</p>
+                    
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="cat-name-0" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold" value="مقاضي">
+                        <input type="number" id="cat-pct-0" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 font-bold text-orange-600 force-english-numbers" value="30">
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="cat-name-1" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold" value="العائلة">
+                        <input type="number" id="cat-pct-1" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-teal-600 force-english-numbers" value="30">
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="cat-name-2" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 font-bold" value="مصاريف شخصية">
+                        <input type="number" id="cat-pct-2" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 font-bold text-amber-600 force-english-numbers" value="30">
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="cat-name-3" class="flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 font-bold" value="ترفيه">
+                        <input type="number" id="cat-pct-3" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 font-bold text-indigo-600 force-english-numbers" value="10">
+                    </div>
+                    
+                    <div id="setup-error" class="hidden text-red-500 text-sm font-bold mt-2 text-center"></div>
+                </div>
+
+                <button id="btn-start" class="w-full bg-stone-800 text-white font-bold py-4 rounded-xl hover:bg-stone-700 transition shadow-lg text-lg mt-4 mb-4">
+                    حفظ والبدء ➔
+                </button>
+            </div>
+        </div>
+
+        <div id="dashboard-view" class="flex-1 flex flex-col hidden h-full">
+            
+            <div class="bg-stone-800 pt-6 pb-4 rounded-b-3xl shadow-md z-10">
+                <div class="flex justify-between items-center px-6 mb-6">
+                    <button id="btn-edit-setup" class="text-2xl text-stone-300 hover:text-white transition">⚙️</button>
+                    <button id="btn-home" class="text-2xl text-stone-300 hover:text-white transition">🏠</button>
+                    <button id="btn-view-logs" class="text-2xl text-stone-300 hover:text-white transition">📋</button>
+                </div>
+                
+                <div class="flex gap-2 px-4" id="tabs-container">
+                    <button class="week-tab flex-1 py-2 rounded-xl font-bold text-xs text-white transition-all duration-200 bg-orange-500" data-week="0">الأسبوع الأول</button>
+                    <button class="week-tab flex-1 py-2 rounded-xl font-bold text-xs text-white transition-all duration-200 bg-teal-500" data-week="1">الأسبوع الثاني</button>
+                    <button class="week-tab flex-1 py-2 rounded-xl font-bold text-xs text-white transition-all duration-200 bg-amber-500" data-week="2">الأسبوع الثالث</button>
+                    <button class="week-tab flex-1 py-2 rounded-xl font-bold text-xs text-white transition-all duration-200 bg-indigo-500" data-week="3">الأسبوع الرابع</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 bg-stone-50 z-0">
+                
+                <div class="flex gap-2 mb-6">
+                    <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
+                        <div class="text-[10px] font-bold text-stone-400 mb-1">الأساسي</div>
+                        <div class="text-lg font-bold text-stone-800 force-english-numbers" id="display-weekly-budget">0.00</div>
+                    </div>
+                    <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
+                        <div class="text-[10px] font-bold text-stone-400 mb-1">المُرحّل</div>
+                        <div class="text-lg font-bold force-english-numbers" id="display-weekly-rollover">0.00</div>
+                    </div>
+                    <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
+                        <div class="text-[10px] font-bold text-stone-400 mb-1">الإجمالي المتبقي</div>
+                        <div class="text-lg font-bold force-english-numbers" id="display-weekly-remaining">0.00</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6" id="tiles-grid">
+                    <div class="tile-c0 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
+                        <span id="tile-name-0" class="text-sm font-bold text-center">فئة 1</span>
+                        <span id="tile-val-0" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
+                        <span id="tile-detail-0" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
+                    </div>
+                    <div class="tile-c1 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
+                        <span id="tile-name-1" class="text-sm font-bold text-center">فئة 2</span>
+                        <span id="tile-val-1" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
+                        <span id="tile-detail-1" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
+                    </div>
+                    <div class="tile-c2 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
+                        <span id="tile-name-2" class="text-sm font-bold text-center">فئة 3</span>
+                        <span id="tile-val-2" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
+                        <span id="tile-detail-2" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
+                    </div>
+                    <div class="tile-c3 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
+                        <span id="tile-name-3" class="text-sm font-bold text-center">فئة 4</span>
+                        <span id="tile-val-3" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
+                        <span id="tile-detail-3" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg border border-stone-200 p-5 mb-6">
+                    <div class="relative mb-6 flex items-center justify-center gap-2">
+                        <input type="number" id="input-expense" class="w-2/3 text-center text-4xl font-bold text-stone-800 border-b-2 border-stone-200 focus:border-stone-800 focus:outline-none pb-2 bg-transparent transition-colors force-english-numbers" placeholder="0.00">
+                        <span class="text-2xl text-stone-400 font-bold border-b-2 border-transparent pb-2">د.ك</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-spend-0" class="btn-c0 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
+                        <button id="btn-spend-1" class="btn-c1 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
+                        <button id="btn-spend-2" class="btn-c2 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
+                        <button id="btn-spend-3" class="btn-c3 font-bold py-3 px-2 rounded-xl text-sm shadow-sm transition active:scale-95">خصم</button>
+                    </div>
+                    <div id="toast-message" class="text-red-500 text-sm font-bold mt-4 text-center h-5 transition-opacity duration-300 opacity-0 force-english-numbers">
+                        تم تسجيل العملية بنجاح
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="transactions-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
+            <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 flex justify-between items-center">
+                <h2 class="text-xl font-bold">📋 سجل العمليات</h2>
+                <button id="btn-close-logs" class="text-sm bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded-lg transition font-bold">رجوع</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6" id="transactions-list"></div>
+        </div>
+
+        <div id="vault-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
+            
+            <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
+                <h2 class="text-lg text-stone-300 mb-1">إجمالي المدخرات (القبو)</h2>
+                <div class="text-4xl font-bold text-green-400 force-english-numbers mb-2" id="vault-total-saved">0.00 د.ك</div>
+                <div class="text-xs text-stone-400 border-t border-stone-600 pt-2 mx-8 mt-2">
+                    إجمالي مصروفات جميع الدورات: 
+                    <span id="vault-all-time-spent" class="font-bold text-red-400 force-english-numbers ml-1">0.00</span> د.ك
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4">
+                <button id="btn-vault-back" class="w-full bg-stone-200 text-stone-800 font-bold py-3 rounded-xl mb-4 hover:bg-stone-300 transition">العودة للميزانية الحالية</button>
+                
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-stone-800 text-lg">🎯 صناديق الادخار</h3>
+                        <button id="btn-add-allocation" class="text-xs font-bold text-teal-700 bg-teal-100 hover:bg-teal-200 px-3 py-1.5 rounded-lg transition">+ صندوق جديد</button>
+                    </div>
+                    
+                    <div class="flex justify-between items-center bg-stone-50 p-3 rounded-xl border border-stone-100 mb-4">
+                        <span class="text-sm font-bold text-stone-600">المبلغ غير المخصص:</span>
+                        <span id="vault-unallocated" class="text-lg font-bold text-green-600 force-english-numbers">0.00 د.ك</span>
+                    </div>
+
+                    <div id="allocations-list" class="space-y-3">
+                        </div>
+                </div>
+
+                <button id="btn-close-cycle" class="w-full bg-stone-800 text-white font-bold py-4 rounded-xl shadow-lg mb-8 hover:bg-stone-700 transition text-lg border-2 border-green-500">
+                    إغلاق الدورة الحالية وترحيل المتبقي 💰
+                </button>
+
+                <h3 class="font-bold text-stone-700 mb-4 px-2">سجل الدورات السابقة</h3>
+                <div id="vault-history-list" class="space-y-3 pb-8"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'smartEnvelopeBudgetState_Arabic_V1_4';
+        let appState = null;
+        let activeWeekIndex = 0;
+        
+        function initApp() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                appState = JSON.parse(saved);
+                
+                // التأكد من وجود المتغيرات الجديدة للنسخ القديمة
+                if (!appState.allTimeSpent) appState.allTimeSpent = 0;
+                if (!appState.vaultAllocations) appState.vaultAllocations = [];
+
+                showDashboard();
+            } else {
+                addDeductibleRowToDOM('', '');
+                document.getElementById('input-cycle-start').valueAsDate = new Date();
+                showSetup();
+            }
+            attachListeners();
+        }
+
+        function updateFixedTotal() {
+            let fixedTotal = 0;
+            document.querySelectorAll('.deductible-amount').forEach(input => {
+                fixedTotal += parseFloat(input.value) || 0;
+            });
+            document.getElementById('display-fixed-total').innerText = fixedTotal.toFixed(2);
+        }
+
+        function updatePctTotal() {
+            let totalPct = 0;
+            document.querySelectorAll('.cat-pct-input').forEach(input => {
+                totalPct += parseFloat(input.value) || 0;
+            });
+            const pctEl = document.getElementById('display-pct-total');
+            pctEl.innerText = totalPct + '%';
+            
+            if(totalPct === 100) {
+                pctEl.className = 'font-bold text-blue-600 force-english-numbers';
+            } else {
+                pctEl.className = 'font-bold text-red-500 force-english-numbers';
+            }
+        }
+
+        function showSetup() { 
+            hideAll(); 
+            document.getElementById('setup-view').classList.remove('hidden'); 
+            updateFixedTotal();
+            updatePctTotal();
+        }
+        
+        function showDashboard() { 
+            hideAll(); 
+            document.getElementById('dashboard-view').classList.remove('hidden'); 
+            renderDashboard(); 
+        }
+        function showTransactions() { 
+            hideAll(); 
+            document.getElementById('transactions-view').classList.remove('hidden'); 
+            renderTransactionsList(); 
+        }
+        function showVault() { 
+            hideAll(); 
+            document.getElementById('vault-view').classList.remove('hidden'); 
+            renderVault(); 
+        }
+        function hideAll() {
+            ['setup-view', 'dashboard-view', 'transactions-view', 'vault-view'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        }
+
+        function addDeductibleRowToDOM(name = '', amount = '') {
+            const container = document.getElementById('deductibles-list');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 deductible-row items-center';
+            div.innerHTML = `
+                <input type="text" class="deductible-name flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none font-bold" placeholder="الاسم (مثال: إيجار)" value="${name}">
+                <input type="number" class="deductible-amount w-24 p-3 border border-stone-300 rounded-lg focus:outline-none text-center force-english-numbers" placeholder="0" value="${amount}">
+                <button type="button" class="btn-remove-ded text-red-400 font-bold p-2">X</button>
+            `;
+            
+            div.querySelector('.deductible-amount').addEventListener('input', updateFixedTotal);
+            
+            div.querySelector('.btn-remove-ded').onclick = () => {
+                div.remove();
+                updateFixedTotal();
+            };
+            container.appendChild(div);
+            updateFixedTotal();
+        }
+
+        function handleSetup() {
+            const dateVal = document.getElementById('input-cycle-start').value;
+            const salary = parseFloat(document.getElementById('input-salary').value) || 0;
+            
+            let fixedTotal = 0;
+            document.querySelectorAll('.deductible-row').forEach(row => {
+                const a = parseFloat(row.querySelector('.deductible-amount').value) || 0;
+                fixedTotal += a;
+            });
+            
+            let cats = [];
+            let totalPct = 0;
+            const remaining = salary - fixedTotal;
+            const weeklyTarget = remaining > 0 ? (remaining / 4) : 0;
+
+            for (let i = 0; i < 4; i++) {
+                const name = document.getElementById(`cat-name-${i}`).value || `فئة ${i+1}`;
+                const pct = parseFloat(document.getElementById(`cat-pct-${i}`).value) || 0;
+                totalPct += pct;
+                cats.push({ id: i, name: name, pct: pct, weeklyAllowance: (pct / 100) * weeklyTarget });
+            }
+
+            const err = document.getElementById('setup-error');
+            if (totalPct !== 100) {
+                err.innerText = `مجموع النسب يجب أن يكون 100%. الحالي: ${totalPct}%`;
+                err.classList.remove('hidden'); return;
+            }
+            err.classList.add('hidden');
+
+            if (!appState) {
+                appState = { 
+                    transactions: [], 
+                    history: [], 
+                    vaultTotal: 0,
+                    allTimeSpent: 0,
+                    vaultAllocations: []
+                };
+            }
+            
+            appState.cycleDate = dateVal;
+            appState.salary = salary;
+            appState.fixedTotal = fixedTotal;
+            appState.categories = cats;
+            
+            saveState();
+            showDashboard();
+        }
+
+        function renderDashboard() {
+            document.querySelectorAll('.week-tab').forEach(btn => {
+                if(parseInt(btn.dataset.week) === activeWeekIndex) {
+                    btn.classList.remove('opacity-50', 'scale-95');
+                    btn.classList.add('opacity-100', 'scale-105', 'shadow-md');
+                } else {
+                    btn.classList.remove('opacity-100', 'scale-105', 'shadow-md');
+                    btn.classList.add('opacity-50', 'scale-95');
+                }
+            });
+
+            let totalWeeklyBudget = 0;
+            let totalRollover = 0;
+            let totalRemainingThisWeek = 0;
+
+            appState.categories.forEach((cat, index) => {
+                let spentPreviousWeeks = 0;
+                let spentThisWeek = 0;
+
+                appState.transactions.forEach(tx => {
+                    if (tx.catId === cat.id) {
+                        if (tx.weekIndex < activeWeekIndex) {
+                            spentPreviousWeeks += tx.amount;
+                        } else if (tx.weekIndex === activeWeekIndex) {
+                            spentThisWeek += tx.amount;
+                        }
+                    }
+                });
+
+                const allowancePreviousWeeks = cat.weeklyAllowance * activeWeekIndex;
+                const catRollover = allowancePreviousWeeks - spentPreviousWeeks;
+                
+                const catCurrentBal = cat.weeklyAllowance + catRollover - spentThisWeek;
+                
+                totalWeeklyBudget += cat.weeklyAllowance;
+                totalRollover += catRollover;
+                totalRemainingThisWeek += catCurrentBal;
+                
+                document.getElementById(`tile-name-${index}`).innerText = cat.name;
+                document.getElementById(`tile-val-${index}`).innerText = catCurrentBal.toFixed(2);
+                
+                let rolloverStr = (catRollover >= 0 ? '+' : '') + catRollover.toFixed(2);
+                document.getElementById(`tile-detail-${index}`).innerText = `المُرحّل: ${rolloverStr}`;
+
+                document.getElementById(`btn-spend-${index}`).innerText = cat.name;
+            });
+
+            document.getElementById('display-weekly-budget').innerText = totalWeeklyBudget.toFixed(2);
+            
+            let globalRolloverEl = document.getElementById('display-weekly-rollover');
+            let globalRolloverStr = (totalRollover >= 0 ? '+' : '') + totalRollover.toFixed(2);
+            globalRolloverEl.innerText = globalRolloverStr;
+            globalRolloverEl.className = `text-lg font-bold force-english-numbers ${totalRollover >= 0 ? 'text-teal-600' : 'text-red-500'}`;
+
+            let globalRemainingEl = document.getElementById('display-weekly-remaining');
+            globalRemainingEl.innerText = totalRemainingThisWeek.toFixed(2);
+            globalRemainingEl.className = `text-lg font-bold force-english-numbers ${totalRemainingThisWeek >= 0 ? 'text-orange-500' : 'text-red-500'}`;
+        }
+
+        function processTransaction(catIndex) {
+            const inputEl = document.getElementById('input-expense');
+            const amount = parseFloat(inputEl.value);
+
+            if (isNaN(amount) || amount <= 0) return;
+
+            appState.transactions.push({
+                id: Date.now().toString(),
+                timestamp: Date.now(),
+                amount: amount,
+                catId: catIndex,
+                weekIndex: activeWeekIndex
+            });
+            
+            const catName = appState.categories[catIndex].name;
+            showToast(`تم خصم ${amount.toFixed(2)} د.ك. من ${catName}`);
+
+            inputEl.value = '';
+            saveState();
+            renderDashboard();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0');
+            
+            if(window.toastTimer) clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        function renderTransactionsList() {
+            const listEl = document.getElementById('transactions-list');
+            listEl.innerHTML = '';
+            
+            const sortedTx = [...appState.transactions].sort((a, b) => b.timestamp - a.timestamp);
+            sortedTx.forEach(tx => {
+                const cat = appState.categories.find(c => c.id === tx.catId);
+                const d = new Date(tx.timestamp);
+                const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
+                
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-xl shadow-sm border border-stone-100 flex justify-between items-center mb-3 force-english-numbers';
+                div.innerHTML = `
+                    <div>
+                        <div class="font-bold text-stone-800" style="font-family:'Cairo'">${cat.name} <span class="text-xs text-stone-400 font-normal mr-2 bg-stone-100 px-2 py-0.5 rounded-full">أسبوع ${tx.weekIndex + 1}</span></div>
+                        <div class="text-xs text-stone-500 mt-1 force-english-numbers">${dateStr}</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="font-bold text-lg text-red-500 ml-2">-${tx.amount.toFixed(2)}</div>
+                        <button class="text-stone-400 hover:text-stone-700 p-1 bg-stone-100 rounded btn-del" data-id="${tx.id}">🗑️</button>
+                    </div>
+                `;
+                div.querySelector('.btn-del').onclick = () => {
+                    appState.transactions = appState.transactions.filter(t => t.id !== tx.id);
+                    saveState(); renderTransactionsList();
+                };
+                listEl.appendChild(div);
+            });
+        }
+
+        function renderAllocations() {
+            const listEl = document.getElementById('allocations-list');
+            listEl.innerHTML = '';
+            
+            let allocatedTotal = 0;
+            if(!appState.vaultAllocations) appState.vaultAllocations = [];
+            
+            appState.vaultAllocations.forEach(alloc => allocatedTotal += alloc.amount);
+            
+            let vaultTotal = appState.vaultTotal || 0;
+            let unallocated = vaultTotal - allocatedTotal;
+            
+            let unallocatedEl = document.getElementById('vault-unallocated');
+            unallocatedEl.innerText = unallocated.toFixed(2) + ' د.ك';
+            unallocatedEl.className = `text-lg font-bold force-english-numbers ${unallocated < 0 ? 'text-red-500' : 'text-green-600'}`;
+
+            appState.vaultAllocations.forEach(alloc => {
+                const div = document.createElement('div');
+                div.className = 'flex gap-2 items-center bg-stone-50 p-2 rounded-lg border border-stone-200';
+                div.innerHTML = `
+                    <input type="text" class="alloc-name flex-1 p-2 bg-transparent text-sm font-bold text-stone-700 focus:outline-none placeholder-stone-400" value="${alloc.name}" placeholder="اسم الصندوق (مثال: استثمار)">
+                    <input type="number" class="alloc-amount w-24 p-2 bg-white border border-stone-300 rounded text-sm text-center font-bold text-teal-700 force-english-numbers focus:outline-none focus:ring-1 focus:ring-teal-400" value="${alloc.amount}" placeholder="0">
+                    <button class="btn-del-alloc text-red-400 hover:text-red-600 p-2 font-bold transition">X</button>
+                `;
+                
+                div.querySelector('.alloc-name').addEventListener('change', (e) => {
+                    alloc.name = e.target.value;
+                    saveState();
+                });
+                
+                div.querySelector('.alloc-amount').addEventListener('input', (e) => {
+                    alloc.amount = parseFloat(e.target.value) || 0;
+                    saveState();
+                    renderAllocations(); 
+                });
+                
+                div.querySelector('.btn-del-alloc').onclick = () => {
+                    appState.vaultAllocations = appState.vaultAllocations.filter(a => a.id !== alloc.id);
+                    saveState();
+                    renderAllocations();
+                };
+                
+                listEl.appendChild(div);
+            });
+        }
+
+        function renderVault() {
+            // تحديث إجمالي القبو
+            document.getElementById('vault-total-saved').innerText = (appState.vaultTotal || 0).toFixed(2);
+            
+            // حساب وعرض المصروفات التراكمية لكل الدورات
+            let currentCycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+            let totalAllTimeSpent = (appState.allTimeSpent || 0) + currentCycleSpent;
+            document.getElementById('vault-all-time-spent').innerText = totalAllTimeSpent.toFixed(2);
+
+            // تحديث قسم صناديق الادخار
+            renderAllocations();
+
+            // تحديث قائمة السجل
+            const listEl = document.getElementById('vault-history-list');
+            listEl.innerHTML = '';
+
+            if (!appState.history || appState.history.length === 0) {
+                listEl.innerHTML = '<div class="text-stone-400 text-sm text-center py-4">لا توجد دورات سابقة محفوظة</div>';
+                return;
+            }
+
+            const sortedHist = [...appState.history].sort((a, b) => b.id - a.id);
+            sortedHist.forEach(item => {
+                const d = new Date(item.date);
+                const title = `دورة ${d.getMonth()+1}/${d.getFullYear()}`;
+                
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-xl shadow-sm border border-stone-100 flex justify-between items-center force-english-numbers';
+                div.innerHTML = `
+                    <div class="font-bold text-stone-800" style="font-family:'Cairo'">${title}</div>
+                    <div class="flex items-center gap-2">
+                        <div class="font-bold text-lg text-green-500 ml-2">+${item.saved.toFixed(2)}</div>
+                        <button class="text-stone-400 hover:text-stone-700 p-1.5 bg-stone-100 rounded btn-edit-hist">✏️</button>
+                        <button class="text-stone-400 hover:text-stone-700 p-1.5 bg-stone-100 rounded btn-del-hist">🗑️</button>
+                    </div>
+                `;
+                
+                div.querySelector('.btn-edit-hist').onclick = () => {
+                    const newVal = prompt("تعديل مبلغ التوفير لهذه الدورة:", item.saved);
+                    const parsed = parseFloat(newVal);
+                    if(!isNaN(parsed)) {
+                        appState.vaultTotal = appState.vaultTotal - item.saved + parsed;
+                        item.saved = parsed;
+                        saveState();
+                        renderVault();
+                    }
+                };
+                
+                div.querySelector('.btn-del-hist').onclick = () => {
+                    if(confirm("هل تريد حذف هذه الدورة من السجل؟ (سيتم خصمها من الإجمالي)")) {
+                        appState.vaultTotal -= item.saved;
+                        appState.history = appState.history.filter(h => h.id !== item.id);
+                        saveState();
+                        renderVault();
+                    }
+                };
+                
+                listEl.appendChild(div);
+            });
+        }
+        
+        function closeCurrentCycle() {
+            if (!confirm("هل أنت متأكد من إنهاء الدورة الحالية وترحيل المتبقي إلى القبو؟")) return;
+
+            if (!appState.history) {
+                appState.history = [];
+            }
+
+            const totalAllowance = appState.salary - appState.fixedTotal;
+            const cycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+            const cycleSaved = totalAllowance - cycleSpent;
+
+            // تحديث إجمالي المصروفات لجميع الدورات
+            appState.allTimeSpent = (appState.allTimeSpent || 0) + cycleSpent;
+
+            // إضافة الفائض للقبو
+            appState.vaultTotal = (appState.vaultTotal || 0) + cycleSaved;
+
+            appState.history.push({
+                id: Date.now().toString(),
+                date: appState.cycleDate || new Date().toISOString().split('T')[0],
+                saved: cycleSaved
+            });
+
+            // تصفير الميزانية وتجهيز الدورة الجديدة
+            appState.transactions = [];
+            activeWeekIndex = 0;
+            appState.cycleDate = new Date().toISOString().split('T')[0];
+            
+            saveState();
+            
+            // تحويل المستخدم لشاشة الإعدادات لبدء دورة جديدة
+            document.getElementById('input-cycle-start').value = appState.cycleDate;
+            document.getElementById('btn-cancel-setup').classList.add('hidden');
+            showSetup();
+        }
+
+        function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+
+        function attachListeners() {
+            document.querySelectorAll('.cat-pct-input').forEach(input => {
+                input.addEventListener('input', updatePctTotal);
+            });
+
+            document.getElementById('btn-add-deductible').onclick = () => addDeductibleRowToDOM();
+            
+            // زر إضافة صندوق ادخار جديد
+            document.getElementById('btn-add-allocation').onclick = () => {
+                if(!appState.vaultAllocations) appState.vaultAllocations = [];
+                appState.vaultAllocations.push({ id: Date.now().toString(), name: '', amount: 0 });
+                saveState();
+                renderAllocations();
+            };
+
+            document.getElementById('btn-start').onclick = handleSetup;
+            document.getElementById('btn-cancel-setup').onclick = showDashboard;
+            
+            document.getElementById('btn-edit-setup').onclick = () => {
+                document.getElementById('input-salary').value = appState.salary;
+                document.getElementById('btn-cancel-setup').classList.remove('hidden');
+                
+                const container = document.getElementById('deductibles-list');
+                container.innerHTML = '';
+                if(appState.fixedTotal > 0) {
+                    addDeductibleRowToDOM('التزامات سابقة', appState.fixedTotal);
+                }
+                
+                showSetup();
+            };
+            document.getElementById('btn-view-logs').onclick = showTransactions;
+            document.getElementById('btn-close-logs').onclick = showDashboard;
+            document.getElementById('btn-home').onclick = showVault;
+            document.getElementById('btn-vault-back').onclick = showDashboard;
+            
+            // زر إغلاق الدورة
+            document.getElementById('btn-close-cycle').onclick = closeCurrentCycle;
+            
+            document.querySelectorAll('.week-tab').forEach(btn => {
+                btn.onclick = (e) => {
+                    activeWeekIndex = parseInt(e.target.dataset.week);
+                    renderDashboard();
+                };
+            });
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`btn-spend-${i}`).onclick = () => processTransaction(i);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
