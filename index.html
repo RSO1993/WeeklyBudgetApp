@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الميزانية الأسبوعية</title>
+    <title>الميزانية الذكية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
@@ -111,7 +112,7 @@
         <!-- الشاشة الرئيسية (الميزانية والأظرف) -->
         <div id="dashboard-view" class="flex-1 flex flex-col hidden h-full">
             
-            <!-- الشريط العلوي النظيف والتبويبات الملونة -->
+            <!-- الشريط العلوي -->
             <div class="bg-stone-800 pt-6 pb-4 rounded-b-3xl shadow-md z-10">
                 <div class="flex justify-between items-center px-6 mb-6">
                     <button id="btn-edit-setup" class="text-2xl text-stone-300 hover:text-white transition">⚙️</button>
@@ -136,11 +137,11 @@
                         <div class="text-lg font-bold text-stone-800 force-english-numbers" id="display-weekly-budget">0.00</div>
                     </div>
                     <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
-                        <div class="text-[10px] font-bold text-stone-400 mb-1">المُرحّل من الأسبوع السابق</div>
+                        <div class="text-[10px] font-bold text-stone-400 mb-1">المُرحّل</div>
                         <div class="text-lg font-bold force-english-numbers" id="display-weekly-rollover">0.00</div>
                     </div>
                     <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
-                        <div class="text-[10px] font-bold text-stone-400 mb-1"> المتبقي</div>
+                        <div class="text-[10px] font-bold text-stone-400 mb-1">الإجمالي المتبقي</div>
                         <div class="text-lg font-bold force-english-numbers" id="display-weekly-remaining">0.00</div>
                     </div>
                 </div>
@@ -150,22 +151,22 @@
                     <div class="tile-c0 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
                         <span id="tile-name-0" class="text-sm font-bold text-center">فئة 1</span>
                         <span id="tile-val-0" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-0" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">الموفر: 0.00</span>
+                        <span id="tile-detail-0" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
                     </div>
                     <div class="tile-c1 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
                         <span id="tile-name-1" class="text-sm font-bold text-center">فئة 2</span>
                         <span id="tile-val-1" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-1" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">الموفر: 0.00</span>
+                        <span id="tile-detail-1" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
                     </div>
                     <div class="tile-c2 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
                         <span id="tile-name-2" class="text-sm font-bold text-center">فئة 3</span>
                         <span id="tile-val-2" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-2" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">الموفر: 0.00</span>
+                        <span id="tile-detail-2" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
                     </div>
                     <div class="tile-c3 rounded-2xl p-4 shadow-md flex flex-col justify-between aspect-square transition transform hover:scale-105">
                         <span id="tile-name-3" class="text-sm font-bold text-center">فئة 4</span>
                         <span id="tile-val-3" class="text-3xl font-bold text-center force-english-numbers mt-2">0.00</span>
-                        <span id="tile-detail-3" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">الموفر: 0.00</span>
+                        <span id="tile-detail-3" class="text-[11px] font-bold text-center opacity-75 mt-1 force-english-numbers">المرحل: 0.00</span>
                     </div>
                 </div>
 
@@ -203,7 +204,7 @@
             
             <!-- الصندوق العلوي (إجمالي المدخرات والمصروفات) -->
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
-                <h2 class="text-lg text-stone-300 mb-1">إجمالي التوفير)</h2>
+                <h2 class="text-lg text-stone-300 mb-1">إجمالي المدخرات (القبو)</h2>
                 <div class="text-4xl font-bold text-green-400 force-english-numbers mb-2" id="vault-total-saved">0.00 د.ك</div>
                 <div class="text-xs text-stone-400 border-t border-stone-600 pt-2 mx-8 mt-2">
                     إجمالي مصروفات جميع الدورات: 
@@ -236,7 +237,7 @@
 
                 <!-- زر إغلاق الدورة -->
                 <button id="btn-close-cycle" class="w-full bg-stone-800 text-white font-bold py-4 rounded-xl shadow-lg mb-8 hover:bg-stone-700 transition text-lg border-2 border-green-500">
-                    إغلاق الدورة الحالية وتوفير المتبقي
+                    إغلاق الدورة الحالية وترحيل المتبقي 💰
                 </button>
 
                 <h3 class="font-bold text-stone-700 mb-4 px-2">سجل الدورات السابقة</h3>
@@ -244,20 +245,70 @@
             </div>
         </div>
 
+        <!-- نافذة منبثقة (Modal) مخصصة بدلاً من رسائل المتصفح المزعجة -->
+        <div id="custom-modal" class="absolute inset-0 bg-stone-900 bg-opacity-60 hidden flex justify-center items-center z-50 p-4">
+            <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm">
+                <h3 id="modal-title" class="text-xl font-bold text-stone-800 mb-2"></h3>
+                <p id="modal-message" class="text-sm text-stone-600 mb-4 hidden"></p>
+                <input type="number" id="modal-input" class="w-full p-3 border border-stone-300 rounded-lg mb-4 hidden force-english-numbers focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <div class="flex gap-3 mt-2">
+                    <button id="btn-modal-confirm" class="flex-1 bg-teal-600 text-white font-bold py-3 rounded-xl hover:bg-teal-700 transition">تأكيد</button>
+                    <button id="btn-modal-cancel" class="flex-1 bg-stone-200 text-stone-800 font-bold py-3 rounded-xl hover:bg-stone-300 transition">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        const STORAGE_KEY = 'smartEnvelopeBudgetState_Arabic_V1_4';
+        const STORAGE_KEY = 'smartEnvelopeBudgetState_Arabic_V1_5';
         let appState = null;
         let activeWeekIndex = 0;
+        let modalCallback = null;
+
+        // دوال النافذة المنبثقة (Modal)
+        function showModal(title, message, isPrompt, defaultValue, callback) {
+            document.getElementById('custom-modal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = title;
+            
+            const msgEl = document.getElementById('modal-message');
+            if(message) { msgEl.innerText = message; msgEl.classList.remove('hidden'); }
+            else { msgEl.classList.add('hidden'); }
+            
+            const inputEl = document.getElementById('modal-input');
+            if(isPrompt) { 
+                inputEl.value = defaultValue || ''; 
+                inputEl.classList.remove('hidden'); 
+                inputEl.focus();
+            }
+            else { inputEl.classList.add('hidden'); }
+            
+            modalCallback = callback;
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+            modalCallback = null;
+        }
+
+        document.getElementById('btn-modal-cancel').onclick = () => {
+            if(modalCallback) modalCallback(null);
+            closeModal();
+        };
+
+        document.getElementById('btn-modal-confirm').onclick = () => {
+            const inputEl = document.getElementById('modal-input');
+            const val = inputEl.classList.contains('hidden') ? true : inputEl.value;
+            if(modalCallback) modalCallback(val);
+            closeModal();
+        };
         
         function initApp() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 appState = JSON.parse(saved);
                 
-                // التأكد من وجود المتغيرات للنسخ القديمة
-                if (appState.cycleActive === undefined) appState.cycleActive = true; // دورة نشطة كوضع افتراضي للنسخ السابقة
+                if (appState.cycleActive === undefined) appState.cycleActive = true; 
                 if (!appState.allTimeSpent) appState.allTimeSpent = 0;
                 if (!appState.vaultAllocations) appState.vaultAllocations = [];
 
@@ -388,7 +439,7 @@
             appState.salary = salary;
             appState.fixedTotal = fixedTotal;
             appState.categories = cats;
-            appState.cycleActive = true; // تم تفعيل دورة جديدة
+            appState.cycleActive = true; 
             
             saveState();
             showDashboard();
@@ -565,13 +616,15 @@
         function renderVault() {
             document.getElementById('vault-total-saved').innerText = (appState.vaultTotal || 0).toFixed(2);
             
-            let currentCycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+            let currentCycleSpent = 0;
+            if (appState.cycleActive) {
+                currentCycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+            }
             let totalAllTimeSpent = (appState.allTimeSpent || 0) + currentCycleSpent;
             document.getElementById('vault-all-time-spent').innerText = totalAllTimeSpent.toFixed(2);
 
             renderAllocations();
 
-            // التحكم بظهور الأزرار بناءً على حالة الدورة
             if (appState.cycleActive === false) {
                 document.getElementById('btn-vault-back').classList.add('hidden');
                 document.getElementById('btn-close-cycle').classList.add('hidden');
@@ -607,23 +660,26 @@
                 `;
                 
                 div.querySelector('.btn-edit-hist').onclick = () => {
-                    const newVal = prompt("تعديل مبلغ التوفير لهذه الدورة:", item.saved);
-                    const parsed = parseFloat(newVal);
-                    if(!isNaN(parsed)) {
-                        appState.vaultTotal = appState.vaultTotal - item.saved + parsed;
-                        item.saved = parsed;
-                        saveState();
-                        renderVault();
-                    }
+                    showModal("تعديل التوفير", "أدخل مبلغ التوفير الجديد لهذه الدورة:", true, item.saved, (newVal) => {
+                        if(newVal === null) return;
+                        const parsed = parseFloat(newVal);
+                        if(!isNaN(parsed)) {
+                            appState.vaultTotal = appState.vaultTotal - item.saved + parsed;
+                            item.saved = parsed;
+                            saveState();
+                            renderVault();
+                        }
+                    });
                 };
                 
                 div.querySelector('.btn-del-hist').onclick = () => {
-                    if(confirm("هل تريد حذف هذه الدورة من السجل؟ (سيتم خصمها من الإجمالي)")) {
+                    showModal("حذف الدورة", "هل تريد حذف هذه الدورة من السجل؟ (سيتم خصمها من الإجمالي)", false, null, (res) => {
+                        if(!res) return;
                         appState.vaultTotal -= item.saved;
                         appState.history = appState.history.filter(h => h.id !== item.id);
                         saveState();
                         renderVault();
-                    }
+                    });
                 };
                 
                 listEl.appendChild(div);
@@ -631,35 +687,33 @@
         }
         
         function closeCurrentCycle() {
-            if (!confirm("هل أنت متأكد من إنهاء الدورة الحالية وترحيل المتبقي إلى القبو؟")) return;
+            showModal("إنهاء الدورة", "هل أنت متأكد من إنهاء الدورة الحالية وترحيل المتبقي إلى القبو؟", false, null, (confirmed) => {
+                if(!confirmed) return;
 
-            if (!appState.history) {
-                appState.history = [];
-            }
+                if (!appState.history) appState.history = [];
 
-            const totalAllowance = appState.salary - appState.fixedTotal;
-            const cycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
-            const cycleSaved = totalAllowance - cycleSpent;
+                const totalAllowance = appState.salary - appState.fixedTotal;
+                const cycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+                const cycleSaved = totalAllowance - cycleSpent;
 
-            appState.allTimeSpent = (appState.allTimeSpent || 0) + cycleSpent;
+                appState.allTimeSpent = (appState.allTimeSpent || 0) + cycleSpent;
+                appState.vaultTotal = (appState.vaultTotal || 0) + cycleSaved;
 
-            appState.vaultTotal = (appState.vaultTotal || 0) + cycleSaved;
+                appState.history.push({
+                    id: Date.now().toString(),
+                    date: appState.cycleDate || new Date().toISOString().split('T')[0],
+                    saved: cycleSaved
+                });
 
-            appState.history.push({
-                id: Date.now().toString(),
-                date: appState.cycleDate || new Date().toISOString().split('T')[0],
-                saved: cycleSaved
+                appState.transactions = [];
+                activeWeekIndex = 0;
+                appState.cycleDate = new Date().toISOString().split('T')[0];
+                
+                appState.cycleActive = false; 
+                
+                saveState();
+                renderVault(); 
             });
-
-            appState.transactions = [];
-            activeWeekIndex = 0;
-            appState.cycleDate = new Date().toISOString().split('T')[0];
-            
-            // إغلاق الدورة وعدم الانتقال التلقائي
-            appState.cycleActive = false; 
-            
-            saveState();
-            renderVault(); // تحديث وإعادة عرض القبو للبقاء فيه
         }
 
         function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
@@ -681,10 +735,9 @@
             document.getElementById('btn-start').onclick = handleSetup;
             document.getElementById('btn-cancel-setup').onclick = showDashboard;
             
-            // زر بدء دورة جديدة (من داخل القبو)
             document.getElementById('btn-start-new-cycle').onclick = () => {
                 document.getElementById('input-cycle-start').valueAsDate = new Date();
-                document.getElementById('btn-cancel-setup').classList.add('hidden'); // إخفاء زر الإلغاء لأن الدورة مغلقة
+                document.getElementById('btn-cancel-setup').classList.add('hidden'); 
                 
                 const container = document.getElementById('deductibles-list');
                 container.innerHTML = '';
@@ -730,3 +783,6 @@
     </script>
 </body>
 </html>
+
+
+```
