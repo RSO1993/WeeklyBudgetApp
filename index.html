@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الميزانية الذكية</title>
+    <title>الميزانية الأسبوعية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -38,7 +38,7 @@
 
     <div id="app-container" class="w-full max-w-lg bg-white shadow-xl min-h-screen flex flex-col relative overflow-hidden">
         
-        <!-- صفحة الإعدادات (التكوين) -->
+        <!-- صفحة الإعدادات -->
         <div id="setup-view" class="flex-1 p-6 overflow-y-auto hidden">
             <div class="mb-6 border-b border-stone-200 pb-4 flex justify-between items-center">
                 <h1 class="text-3xl font-bold text-stone-800 mb-1">⚙️ إعداد الميزانية</h1>
@@ -59,7 +59,7 @@
                 <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-sm font-bold text-stone-700">
-                            الالتزامات الثابتة 
+                            الإستقطاعات الثابتة 
                             <span class="text-xs font-normal text-stone-500 mr-2">(المجموع: <span id="display-fixed-total" class="font-bold text-red-500 force-english-numbers">0.00</span>)</span>
                         </label>
                         <button id="btn-add-deductible" class="text-xs font-bold text-teal-600 hover:text-teal-800 transition">+ إضافة التزام</button>
@@ -70,7 +70,7 @@
                 <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-sm font-bold text-stone-700">
-                            تحديد الفئات (الأظرف)
+                            تحديد فئات المصاريف
                             <span class="text-xs font-normal text-stone-500 mr-2">(المجموع: <span id="display-pct-total" class="font-bold text-blue-600 force-english-numbers">100%</span>)</span>
                         </label>
                         <button id="btn-add-category" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition">+ إضافة فئة</button>
@@ -78,7 +78,7 @@
                     <p class="text-xs text-stone-500 mb-4">يجب أن يكون مجموع النسب 100%.</p>
                     
                     <div id="categories-list" class="space-y-3">
-                        <!-- سيتم توليد الفئات هنا -->
+                        <!-- سيتم توليد فئات المصروفات هنا -->
                     </div>
                     
                     <div id="setup-error" class="hidden text-red-500 text-sm font-bold mt-2 text-center"></div>
@@ -90,7 +90,7 @@
             </div>
         </div>
 
-        <!-- الشاشة الرئيسية (الميزانية والأظرف) -->
+        <!-- الشاشة الرئيسية (الميزانية وفئات الصرف) -->
         <div id="dashboard-view" class="flex-1 flex flex-col hidden h-full">
             
             <!-- الشريط العلوي -->
@@ -118,7 +118,7 @@
                         <div class="text-lg font-bold text-stone-800 force-english-numbers" id="display-weekly-budget">0.00</div>
                     </div>
                     <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
-                        <div class="text-[10px] font-bold text-stone-400 mb-1">المُرحّل</div>
+                        <div class="text-[10px] font-bold text-stone-400 mb-1">المُرحّل من الأسبوع الماضي</div>
                         <div class="text-lg font-bold force-english-numbers" id="display-weekly-rollover">0.00</div>
                     </div>
                     <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
@@ -129,7 +129,7 @@
 
                 <!-- مربعات الفئات الديناميكية -->
                 <div class="grid grid-cols-2 gap-4 mb-6" id="tiles-grid">
-                    <!-- سيتم حقن الأظرف هنا -->
+                    <!-- سيتم حقن الفئات هنا -->
                 </div>
 
                 <!-- تسجيل المصروفات -->
@@ -158,11 +158,11 @@
             <div class="flex-1 overflow-y-auto p-6" id="transactions-list"></div>
         </div>
 
-        <!-- شاشة القبو (المحفظة والتقارير والصناديق) -->
+        <!-- (المحفظة والتقارير والصناديق) -->
         <div id="vault-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
-                <h2 class="text-lg text-stone-300 mb-1">إجمالي المدخرات (القبو)</h2>
+                <h2 class="text-lg text-stone-300 mb-1">إجمالي المدخرات (التوفير)</h2>
                 <div class="text-4xl font-bold text-green-400 force-english-numbers mb-2" id="vault-total-saved">0.00 د.ك</div>
                 <div class="text-xs text-stone-400 border-t border-stone-600 pt-2 mx-8 mt-2">
                     إجمالي مصروفات جميع الدورات: 
@@ -191,7 +191,7 @@
                 </div>
 
                 <button id="btn-close-cycle" class="w-full bg-stone-800 text-white font-bold py-4 rounded-xl shadow-lg mb-8 hover:bg-stone-700 transition text-lg border-2 border-green-500">
-                    إغلاق الدورة الحالية وترحيل المتبقي 💰
+                    إغلاق الدورة الحالية وتوفير المتبقي
                 </button>
 
                 <h3 class="font-bold text-stone-700 mb-4 px-2">سجل الدورات السابقة</h3>
