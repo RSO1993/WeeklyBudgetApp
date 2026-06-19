@@ -42,7 +42,7 @@
 
     <div id="app-container" class="w-full max-w-lg bg-white shadow-xl min-h-screen flex flex-col relative overflow-hidden">
         
-        <!-- صفحة الإعدادات (التكوين) -->
+        <!-- صفحة الإعدادات -->
         <div id="setup-view" class="flex-1 p-6 overflow-y-auto hidden">
             <div class="mb-6 border-b border-stone-200 pb-4 flex justify-between items-center">
                 <h1 class="text-3xl font-bold text-stone-800 mb-1">⚙️ إعداد الميزانية</h1>
@@ -74,16 +74,14 @@
                 <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-sm font-bold text-stone-700">
-                            تحديد الفئات (الأظرف)
+                            تحديد الفئات (المصروفات)
                             <span class="text-xs font-normal text-stone-500 mr-2">(المجموع: <span id="display-pct-total" class="font-bold text-blue-600 force-english-numbers">100%</span>)</span>
                         </label>
                         <button id="btn-add-category" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition">+ إضافة فئة</button>
                     </div>
                     <p class="text-xs text-stone-500 mb-4">يجب أن يكون مجموع النسب 100%.</p>
                     
-                    <div id="categories-list" class="space-y-3">
-                        <!-- سيتم توليد الفئات هنا -->
-                    </div>
+                    <div id="categories-list" class="space-y-3"></div>
                     
                     <div id="setup-error" class="hidden text-red-500 text-sm font-bold mt-2 text-center"></div>
                 </div>
@@ -111,6 +109,11 @@
                     <button class="week-tab flex-1 py-2 rounded-xl font-bold text-xs text-white transition-all duration-200 bg-amber-500" data-week="2">الأسبوع الثالث</button>
                     <button class="week-tab flex-1 py-2 rounded-xl font-bold text-xs text-white transition-all duration-200 bg-indigo-500" data-week="3">الأسبوع الرابع</button>
                 </div>
+                
+                <!-- عداد الأيام الجديد -->
+                <div id="week-countdown" class="text-center text-sm font-bold text-stone-300 mt-4 px-4 force-english-numbers bg-stone-700/50 mx-4 py-2 rounded-xl">
+                    <!-- سيتم حقن النص الذكي هنا -->
+                </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 bg-stone-50 z-0">
@@ -122,8 +125,8 @@
                         <div class="text-lg font-bold text-stone-800 force-english-numbers" id="display-weekly-budget">0.00</div>
                     </div>
                     <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
-                        <div class="text-[10px] font-bold text-stone-400 mb-1">الموفّر من الأسبوع الماضي</div>
-                       <div class="text-lg font-bold force-english-numbers" id="display-weekly-rollover">0.00</div>
+                        <div class="text-[10px] font-bold text-stone-400 mb-1">التوفير من الأسبوع السابق</div>
+                        <div class="text-lg font-bold force-english-numbers" id="display-weekly-rollover">0.00</div>
                     </div>
                     <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
                         <div class="text-[10px] font-bold text-stone-400 mb-1">الإجمالي المتبقي</div>
@@ -132,7 +135,7 @@
                 </div>
 
                 <!-- مربعات الفئات الديناميكية (الآن قابلة للضغط كأزرار للصرف!) -->
-                <p class="text-xs text-stone-400 font-bold text-center mb-3">اضغط على أي ظرف لتسجيل مصروف 💸</p>
+                <p class="text-xs text-stone-400 font-bold text-center mb-3">اضغط على أي فئة لتسجيل مصروف 💸</p>
                 <div class="grid grid-cols-2 gap-4 mb-8" id="tiles-grid">
                     <!-- سيتم حقن الأظرف التفاعلية هنا -->
                 </div>
@@ -149,13 +152,13 @@
             <div class="flex-1 overflow-y-auto p-6" id="transactions-list"></div>
         </div>
 
-        <!--  (المحفظة والتقارير والصناديق) -->
+        <!-- (المحفظة والتقارير والصناديق) -->
         <div id="vault-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
-                <h2 class="text-lg text-stone-300 mb-1">إجمالي المدخرات (التوفير)</h2>
+                <h2 class="text-lg text-stone-300 mb-1">إجمالي المدخرات ()</h2>
                 <div class="text-4xl font-bold text-green-400 force-english-numbers mb-2" id="vault-total-saved">0.00 د.ك</div>
                 <div class="text-xs text-stone-400 border-t border-stone-600 pt-2 mx-8 mt-2">
-                    إجمالي مصروفات جميع الدورات: 
+                    إجمالي مصروفات جميع الدورات السابقة: 
                     <span id="vault-all-time-spent" class="font-bold text-red-400 force-english-numbers ml-1">0.00</span> د.ك
                 </div>
             </div>
@@ -167,7 +170,7 @@
                 <!-- قسم صناديق الادخار -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 mb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-stone-800 text-lg">🎯 صناديق الادخار</h3>
+                        <h3 class="font-bold text-stone-800 text-lg"> صناديق الادخار</h3>
                         <button id="btn-add-allocation" class="text-xs font-bold text-teal-700 bg-teal-100 hover:bg-teal-200 px-3 py-1.5 rounded-lg transition">+ صندوق جديد</button>
                     </div>
                     
@@ -209,7 +212,6 @@
         let activeWeekIndex = 0;
         let modalCallback = null;
 
-        // مكتبة ألوان الفئات الديناميكية
         const catStyles = [
             { tile: 'bg-orange-400 text-white border-orange-500', hex: '#fb923c' },
             { tile: 'bg-teal-500 text-white border-teal-600', hex: '#14b8a6' },
@@ -230,7 +232,6 @@
             if(isPrompt) { 
                 inputEl.value = defaultValue || ''; 
                 inputEl.classList.remove('hidden'); 
-                // التركيز المباشر لفتح الكيبورد
                 setTimeout(() => inputEl.focus(), 50); 
             } else { 
                 inputEl.classList.add('hidden'); 
@@ -263,17 +264,28 @@
                 if (!appState.allTimeSpent) appState.allTimeSpent = 0;
                 if (!appState.vaultAllocations) appState.vaultAllocations = [];
 
-                if (appState.cycleActive) showDashboard();
+                if (appState.cycleActive) {
+                    // تحديد الأسبوع التلقائي بناءً على تاريخ اليوم!
+                    const cycleStart = new Date(appState.cycleDate);
+                    cycleStart.setHours(0,0,0,0);
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    
+                    let currentActualWeek = Math.floor((today - cycleStart) / (1000 * 60 * 60 * 24) / 7);
+                    if(currentActualWeek < 0) currentActualWeek = 0;
+                    if(currentActualWeek > 3) currentActualWeek = 3;
+                    
+                    activeWeekIndex = currentActualWeek;
+                    showDashboard();
+                }
                 else showVault();
             } else {
                 addDeductibleRowToDOM('', '');
                 document.getElementById('input-cycle-start').valueAsDate = new Date();
-                
                 addCategoryRowToDOM(null, 'مقاضي', 30);
                 addCategoryRowToDOM(null, 'العائلة', 30);
                 addCategoryRowToDOM(null, 'مصاريف شخصية', 30);
                 addCategoryRowToDOM(null, 'ترفيه', 10);
-                
                 showSetup();
             }
             attachListeners();
@@ -294,17 +306,11 @@
             });
             const pctEl = document.getElementById('display-pct-total');
             pctEl.innerText = totalPct + '%';
-            
             if(totalPct === 100) pctEl.className = 'font-bold text-blue-600 force-english-numbers';
             else pctEl.className = 'font-bold text-red-500 force-english-numbers';
         }
 
-        function showSetup() { 
-            hideAll(); 
-            document.getElementById('setup-view').classList.remove('hidden'); 
-            updateFixedTotal();
-            updatePctTotal();
-        }
+        function showSetup() { hideAll(); document.getElementById('setup-view').classList.remove('hidden'); updateFixedTotal(); updatePctTotal(); }
         function showDashboard() { hideAll(); document.getElementById('dashboard-view').classList.remove('hidden'); renderDashboard(); }
         function showTransactions() { hideAll(); document.getElementById('transactions-view').classList.remove('hidden'); renderTransactionsList(); }
         function showVault() { hideAll(); document.getElementById('vault-view').classList.remove('hidden'); renderVault(); }
@@ -320,7 +326,7 @@
             const div = document.createElement('div');
             div.className = 'flex gap-2 deductible-row items-center';
             div.innerHTML = `
-                <input type="text" class="deductible-name flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none font-bold" placeholder="الاسم (مثال: أقساط)" value="${name}">
+                <input type="text" class="deductible-name flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none font-bold" placeholder="الاسم (مثال: إيجار)" value="${name}">
                 <input type="number" class="deductible-amount w-24 p-3 border border-stone-300 rounded-lg focus:outline-none text-center force-english-numbers" placeholder="0" value="${amount}">
                 <button type="button" class="btn-remove-ded text-red-400 font-bold p-2">X</button>
             `;
@@ -335,13 +341,11 @@
             const div = document.createElement('div');
             div.className = 'flex gap-2 category-row items-center';
             div.dataset.id = id || Date.now().toString() + Math.random().toString(36).substr(2, 5);
-            
             div.innerHTML = `
                 <input type="text" class="cat-name flex-1 p-3 border border-stone-300 rounded-lg focus:outline-none font-bold" placeholder="اسم الفئة" value="${name}">
                 <input type="number" class="cat-pct-input w-20 p-3 border border-stone-300 rounded-lg focus:outline-none text-center font-bold text-blue-600 force-english-numbers" placeholder="%" value="${pct}">
                 <button type="button" class="btn-remove-cat text-red-400 font-bold p-2">X</button>
             `;
-            
             div.querySelector('.cat-pct-input').addEventListener('input', updatePctTotal);
             div.querySelector('.btn-remove-cat').onclick = () => { div.remove(); updatePctTotal(); };
             container.appendChild(div);
@@ -388,6 +392,15 @@
             appState.cycleActive = true; 
             
             saveState();
+            
+            // إعادة ضبط الأسبوع النشط عند الحفظ
+            const cStart = new Date(appState.cycleDate); cStart.setHours(0,0,0,0);
+            const today = new Date(); today.setHours(0,0,0,0);
+            let currentActualWeek = Math.floor((today - cStart) / (1000 * 60 * 60 * 24) / 7);
+            if(currentActualWeek < 0) currentActualWeek = 0;
+            if(currentActualWeek > 3) currentActualWeek = 3;
+            activeWeekIndex = currentActualWeek;
+
             showDashboard();
         }
 
@@ -401,6 +414,36 @@
                     btn.classList.add('opacity-50', 'scale-95');
                 }
             });
+
+            // حساب عداد الأيام
+            const cycleStart = new Date(appState.cycleDate);
+            cycleStart.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const weekStart = new Date(cycleStart);
+            weekStart.setDate(cycleStart.getDate() + (activeWeekIndex * 7));
+
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            const diffStart = Math.ceil((weekStart - today) / (1000 * 60 * 60 * 24));
+            const diffEnd = Math.ceil((weekEnd - today) / (1000 * 60 * 60 * 24));
+
+            const countdownEl = document.getElementById('week-countdown');
+            if (diffStart > 0) {
+                countdownEl.innerHTML = `⏳ يبدأ هذا الأسبوع بعد <span class="text-orange-400 mx-1">${diffStart}</span> أيام`;
+            } else if (diffEnd < 0) {
+                countdownEl.innerHTML = `✅ انتهى هذا الأسبوع <span class="text-stone-400 font-normal text-xs block mt-1">(يرجى اختيار الأسبوع التالي)</span>`;
+            } else {
+                const daysLeft = diffEnd + 1; // +1 ليتضمن اليوم الحالي كجزء من المتبقي
+                if (daysLeft === 1) {
+                    countdownEl.innerHTML = `⚠️ ينتهي هذا الأسبوع <span class="text-red-400 mx-1">اليوم!</span>`;
+                } else {
+                    countdownEl.innerHTML = `⏳ متبقي <span class="text-teal-400 mx-1">${daysLeft}</span> أيام وينتهي الأسبوع`;
+                }
+            }
+
 
             let totalWeeklyBudget = 0;
             let totalRollover = 0;
@@ -431,7 +474,6 @@
                 const style = catStyles[index % catStyles.length];
                 let rolloverStr = (catRollover >= 0 ? '+' : '') + catRollover.toFixed(2);
 
-                // إنشاء الظرف كزر تفاعلي
                 const tile = document.createElement('button');
                 tile.className = `${style.tile} border-b-4 rounded-2xl p-4 shadow-lg flex flex-col justify-between aspect-square transition transform hover:scale-105 active:scale-95 active:border-b-0 active:translate-y-1 w-full text-right outline-none`;
                 tile.innerHTML = `
@@ -440,8 +482,25 @@
                     <span class="text-[11px] font-bold block w-full text-center opacity-80 mt-1 force-english-numbers">المرحل: ${rolloverStr}</span>
                 `;
                 
-                // عند الضغط على الظرف، تفتح نافذة الخصم
-                tile.onclick = () => promptTransaction(cat.id, cat.name);
+                tile.onclick = () => {
+                    showModal("تسجيل مصروف 💸", `المبلغ المخصوم من "${cat.name}":`, true, '', (val) => {
+                        if (val === null || val === '') return;
+                        const amount = parseFloat(val);
+                        if (isNaN(amount) || amount <= 0) return;
+
+                        appState.transactions.push({
+                            id: Date.now().toString(),
+                            timestamp: Date.now(),
+                            amount: amount,
+                            catId: cat.id.toString(),
+                            weekIndex: activeWeekIndex
+                        });
+                        
+                        showToast(`تم خصم ${amount.toFixed(2)} د.ك. من ${cat.name}`);
+                        saveState();
+                        renderDashboard();
+                    });
+                };
                 
                 tilesGrid.appendChild(tile);
             });
@@ -454,28 +513,6 @@
             let globalRemainingEl = document.getElementById('display-weekly-remaining');
             globalRemainingEl.innerText = totalRemainingThisWeek.toFixed(2);
             globalRemainingEl.className = `text-lg font-bold force-english-numbers ${totalRemainingThisWeek >= 0 ? 'text-orange-500' : 'text-red-500'}`;
-        }
-
-        // دالة جديدة لتسجيل المصروف عبر النافذة المنبثقة
-        function promptTransaction(catId, catName) {
-            showModal("تسجيل مصروف 💸", `المبلغ المخصوم من "${catName}":`, true, '', (val) => {
-                if (val === null || val === '') return;
-                
-                const amount = parseFloat(val);
-                if (isNaN(amount) || amount <= 0) return;
-
-                appState.transactions.push({
-                    id: Date.now().toString(),
-                    timestamp: Date.now(),
-                    amount: amount,
-                    catId: catId.toString(),
-                    weekIndex: activeWeekIndex
-                });
-                
-                showToast(`تم خصم ${amount.toFixed(2)} د.ك. من ${catName}`);
-                saveState();
-                renderDashboard();
-            });
         }
 
         function showToast(msg) {
@@ -524,7 +561,6 @@
             
             let allocatedTotal = 0;
             if(!appState.vaultAllocations) appState.vaultAllocations = [];
-            
             appState.vaultAllocations.forEach(alloc => allocatedTotal += alloc.amount);
             
             let vaultTotal = appState.vaultTotal || 0;
@@ -624,9 +660,8 @@
         }
         
         function closeCurrentCycle() {
-            showModal("إنهاء الدورة", "هل أنت متأكد من إنهاء الدورة الحالية وتوفير المتبقي؟", false, null, (confirmed) => {
+            showModal("إنهاء الدورة", "هل أنت متأكد من إنهاء الدورة الحالية وترحيل المتبقي إلى القبو؟", false, null, (confirmed) => {
                 if(!confirmed) return;
-
                 if (!appState.history) appState.history = [];
 
                 const totalAllowance = appState.salary - appState.fixedTotal;
@@ -657,9 +692,7 @@
         function attachListeners() {
             document.getElementById('btn-add-deductible').onclick = () => addDeductibleRowToDOM();
             
-            document.getElementById('btn-add-category').onclick = () => {
-                addCategoryRowToDOM(null, '', 0);
-            };
+            document.getElementById('btn-add-category').onclick = () => { addCategoryRowToDOM(null, '', 0); };
 
             document.getElementById('btn-add-allocation').onclick = () => {
                 if(!appState.vaultAllocations) appState.vaultAllocations = [];
