@@ -1,0 +1,21 @@
+json
+{
+  "short_name": "الميزانية",
+  "name": "الميزانية الذكية",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#292524",
+  "background_color": "#faf9f6"
+}
