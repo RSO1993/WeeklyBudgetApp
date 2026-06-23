@@ -1,16 +1,15 @@
-json
 {
   "short_name": "الميزانية",
   "name": "الميزانية الذكية",
   "icons": [
     {
-      "src": "icon-192.png",
-      "type": "image/png",
+      "src": "icon-192.jpg",
+      "type": "image/jpeg",
       "sizes": "192x192"
     },
     {
-      "src": "icon-512.png",
-      "type": "image/png",
+      "src": "icon-512.jpg",
+      "type": "image/jpeg",
       "sizes": "512x512"
     }
   ],
