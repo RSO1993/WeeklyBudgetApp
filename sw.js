@@ -1,5 +1,5 @@
 // Change this version number every time you update your code!
-const CACHE_NAME = 'smart-budget-v2'; 
+const CACHE_NAME = 'smart-budget-v3'; 
 
 const urlsToCache = [
   './',
