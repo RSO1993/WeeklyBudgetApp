@@ -35,14 +35,12 @@
 </head>
 <body class="flex justify-center min-h-screen selection:bg-stone-200 relative">
 
-    <!-- رسالة الإشعار العائمة (Toast) -->
     <div id="toast-message" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full shadow-2xl text-sm font-bold transition-all duration-300 opacity-0 pointer-events-none z-50 force-english-numbers translate-y-4">
         تم تسجيل العملية بنجاح
     </div>
 
     <div id="app-container" class="w-full max-w-lg bg-white shadow-xl min-h-screen flex flex-col relative overflow-hidden">
         
-        <!-- صفحة الإعدادات -->
         <div id="setup-view" class="flex-1 p-6 overflow-y-auto hidden">
             <div class="mb-6 border-b border-stone-200 pb-4 flex justify-between items-center">
                 <h1 class="text-3xl font-bold text-stone-800 mb-1">⚙️ إعداد الميزانية</h1>
@@ -71,7 +69,6 @@
                     <div id="deductibles-list" class="space-y-2 mt-3"></div>
                 </div>
 
-                <!-- قسم هدف الادخار التلقائي الجديد -->
                 <div class="bg-stone-50 p-4 rounded-xl border border-stone-100">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-sm font-bold text-stone-700">
@@ -106,10 +103,8 @@
             </div>
         </div>
 
-        <!-- الشاشة الرئيسية (الميزانية والأظرف) -->
         <div id="dashboard-view" class="flex-1 flex flex-col hidden h-full">
             
-            <!-- الشريط العلوي -->
             <div class="bg-stone-800 pt-6 pb-4 rounded-b-3xl shadow-md z-10">
                 <div class="flex justify-between items-center px-6 mb-6">
                     <button id="btn-edit-setup" class="text-2xl text-stone-300 hover:text-white transition">⚙️</button>
@@ -124,15 +119,12 @@
                     <button class="week-tab flex-1 py-2 rounded-xl font-bold text-xs text-white transition-all duration-200 bg-indigo-500" data-week="3">الأسبوع الرابع</button>
                 </div>
                 
-                <!-- عداد الأيام -->
                 <div id="week-countdown" class="text-center text-sm font-bold text-stone-300 mt-4 px-4 force-english-numbers bg-stone-700/50 mx-4 py-2 rounded-xl">
-                    <!-- سيتم حقن النص الذكي هنا -->
-                </div>
+                    </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 bg-stone-50 z-0">
                 
-                <!-- ملخص الأسبوع المحدث -->
                 <div class="flex gap-2 mb-6">
                     <div class="flex-1 bg-white p-3 rounded-2xl shadow-sm border border-stone-100 text-center">
                         <div class="text-[10px] font-bold text-stone-400 mb-1">الأساسي</div>
@@ -148,14 +140,13 @@
                     </div>
                 </div>
 
-                <!-- بطاقة الهدف (شريط التقدم) -->
                 <div id="goal-card" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 mb-6 hidden">
                     <div class="flex justify-between items-end mb-2">
                         <div>
                             <h3 class="text-sm font-bold text-stone-800" id="goal-display-name">الهدف</h3>
                             <p class="text-xs text-stone-500 mt-1">
                                 <span id="goal-display-current" class="font-bold text-green-600 force-english-numbers">0.00</span> / 
-                                <span id="goal-display-target" class="force-english-numbers">0.00</span> د.ك
+                                <span id="goal-display-target" class="force-english-numbers">0.00</span>
                             </p>
                         </div>
                         <div class="text-lg font-bold text-green-500 force-english-numbers" id="goal-display-pct">0%</div>
@@ -165,16 +156,13 @@
                     </div>
                 </div>
 
-                <!-- مربعات الفئات الديناميكية -->
                 <p class="text-xs text-stone-400 font-bold text-center mb-3">اضغط على أي فئة لتسجيل مصروف 💸</p>
                 <div class="grid grid-cols-2 gap-4 mb-8" id="tiles-grid">
-                    <!-- سيتم حقن الأظرف التفاعلية هنا -->
-                </div>
+                    </div>
 
             </div>
         </div>
 
-        <!-- شاشة السجل (العمليات) -->
         <div id="transactions-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 flex justify-between items-center">
                 <h2 class="text-xl font-bold">📋 سجل العمليات</h2>
@@ -183,7 +171,6 @@
             <div class="flex-1 overflow-y-auto p-6" id="transactions-list"></div>
         </div>
 
-        <!-- (المحفظة والتقارير والصناديق) -->
         <div id="vault-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
                 <h2 class="text-lg text-stone-300 mb-1">إجمالي التوفير</h2>
@@ -198,7 +185,6 @@
                 <button id="btn-vault-back" class="w-full bg-stone-200 text-stone-800 font-bold py-3 rounded-xl mb-4 hover:bg-stone-300 transition">العودة للميزانية الحالية</button>
                 <button id="btn-start-new-cycle" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg mb-6 hover:bg-blue-700 transition hidden text-lg border-2 border-blue-500">بدء دورة جديدة 🚀</button>
 
-                <!-- قسم صناديق الادخار -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 mb-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-stone-800 text-lg"> صناديق الادخار</h3>
@@ -222,7 +208,6 @@
             </div>
         </div>
 
-        <!-- النافذة المنبثقة (Modal) -->
         <div id="custom-modal" class="absolute inset-0 bg-stone-900 bg-opacity-60 hidden flex justify-center items-center z-50 p-4 transition-opacity">
             <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm transform transition-transform scale-100">
                 <h3 id="modal-title" class="text-xl font-bold text-stone-800 mb-2"></h3>
@@ -238,7 +223,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'smartEnvelopeBudgetState_Arabic_V1_7'; // تم تحديث المفتاح للحفظ الجديد
+        const STORAGE_KEY = 'smartEnvelopeBudgetState_Arabic_V1_8'; // تم التحديث لمطابقة التعديلات الجديدة
         let appState = null;
         let activeWeekIndex = 0;
         let modalCallback = null;
@@ -274,7 +259,7 @@
             document.getElementById('modal-title').innerText = title;
             const msgEl = document.getElementById('modal-message');
             if(messageHTML) { 
-                msgEl.innerHTML = messageHTML; // استخدمنا innerHTML لتدعم الرسائل المتعددة الأسطر 
+                msgEl.innerHTML = messageHTML; 
                 msgEl.classList.remove('hidden'); 
             } else { 
                 msgEl.classList.add('hidden'); 
@@ -309,7 +294,7 @@
         
         function initApp() {
             // الترحيل من النسخة القديمة إذا وجدت
-            const oldSaved = localStorage.getItem('smartEnvelopeBudgetState_Arabic_V1_6');
+            const oldSaved = localStorage.getItem('smartEnvelopeBudgetState_Arabic_V1_7');
             if(oldSaved && !localStorage.getItem(STORAGE_KEY)) {
                 localStorage.setItem(STORAGE_KEY, oldSaved);
             }
@@ -322,7 +307,7 @@
                 if (!appState.vaultAllocations) appState.vaultAllocations = [];
                 if (!appState.deductibles) appState.deductibles = []; 
                 
-                // تهيئة بيانات الهدف والادخار التلقائي إذا لم تكن موجودة
+                // تهيئة متغيرات الادخار التلقائي إذا لم تكن موجودة
                 if (!appState.activeGoal) appState.activeGoal = { name: '', targetAmount: 0, currentBalance: 0 };
                 if (!appState.sweeps) appState.sweeps = [];
                 if (!appState.sweptWeeks) appState.sweptWeeks = [];
@@ -379,7 +364,7 @@
                             .filter(tx => tx.catId.toString() === cat.id.toString() && tx.weekIndex <= w)
                             .reduce((sum, tx) => sum + tx.amount, 0);
                         
-                        const pastSweeps = appState.sweeps
+                        const pastSweeps = (appState.sweeps || [])
                             .filter(s => s.catId.toString() === cat.id.toString() && s.weekIndex < w)
                             .reduce((sum, s) => sum + s.amount, 0);
 
@@ -409,7 +394,7 @@
             if (newlySwept) {
                 saveState();
                 // إظهار رسالة التهنئة بالادخار التلقائي
-                const msg = `<b>عمل رائع!</b><br><br>تم تقسيم فائض الأسبوع المنتهي كالتالي:<br><br>🎯 <span class="text-green-600 font-bold">+${totalSweptThisTime.toFixed(2)} د.ك</span> تم إضافتها لهدفك (${appState.activeGoal.name}).<br><br>💰 <span class="text-blue-600 font-bold">+${totalRolloverThisTime.toFixed(2)} د.ك</span> تم ترحيلها كرصيد إضافي لأسبوعك الجديد.`;
+                const msg = `<b>عمل رائع!</b><br><br>انتهى الأسبوع وتم تقسيم الفائض كالتالي:<br><br>🎯 <span class="text-green-600 font-bold">+${totalSweptThisTime.toFixed(2)} د.ك</span> أُضيفت لهدفك (${appState.activeGoal.name}).<br><br>💰 <span class="text-blue-600 font-bold">+${totalRolloverThisTime.toFixed(2)} د.ك</span> رُحّلت كرصيد إضافي لأسبوعك الجديد.`;
                 showModal("انتهى الأسبوع ⏳", msg, false, null, null);
             }
         }
@@ -593,8 +578,8 @@
             if (appState.activeGoal && appState.activeGoal.targetAmount > 0) {
                 goalCard.classList.remove('hidden');
                 document.getElementById('goal-display-name').innerText = appState.activeGoal.name;
-                document.getElementById('goal-display-current').innerText = appState.activeGoal.currentBalance.toFixed(2);
-                document.getElementById('goal-display-target').innerText = appState.activeGoal.targetAmount.toFixed(2);
+                document.getElementById('goal-display-current').innerHTML = formatMoneyHTML(appState.activeGoal.currentBalance);
+                document.getElementById('goal-display-target').innerHTML = formatMoneyHTML(appState.activeGoal.targetAmount);
                 
                 let pct = (appState.activeGoal.currentBalance / appState.activeGoal.targetAmount) * 100;
                 if (pct > 100) pct = 100;
