@@ -227,7 +227,7 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'smartEnvelopeBudgetState_Arabic_V1_8'; // تم التحديث لمطابقة التعديلات الجديدة
+        const STORAGE_KEY = 'smartEnvelopeBudgetState_Arabic_V1_8';
         let appState = null;
         let activeWeekIndex = 0;
         let modalCallback = null;
@@ -297,7 +297,6 @@
         };
         
         function initApp() {
-            // الترحيل من النسخة القديمة إذا وجدت
             const oldSaved = localStorage.getItem('smartEnvelopeBudgetState_Arabic_V1_7');
             if(oldSaved && !localStorage.getItem(STORAGE_KEY)) {
                 localStorage.setItem(STORAGE_KEY, oldSaved);
@@ -311,7 +310,6 @@
                 if (!appState.vaultAllocations) appState.vaultAllocations = [];
                 if (!appState.deductibles) appState.deductibles = []; 
                 
-                // تهيئة متغيرات الادخار التلقائي إذا لم تكن موجودة
                 if (!appState.activeGoal) appState.activeGoal = { name: '', targetAmount: 0, currentBalance: 0 };
                 if (!appState.sweeps) appState.sweeps = [];
                 if (!appState.sweptWeeks) appState.sweptWeeks = [];
@@ -326,7 +324,6 @@
                     if(currentActualWeek < 0) currentActualWeek = 0;
                     if(currentActualWeek > 3) currentActualWeek = 3;
                     
-                    // تشغيل محرك الادخار التلقائي
                     checkAutoSweep(currentActualWeek);
 
                     activeWeekIndex = currentActualWeek;
@@ -347,21 +344,17 @@
             attachListeners();
         }
 
-        // محرك الادخار التلقائي (يقوم بنقل 50% من الفائض عند انتهاء الأسبوع)
         function checkAutoSweep(currentActualWeek) {
             let newlySwept = false;
             let totalSweptThisTime = 0;
             let totalRolloverThisTime = 0;
 
-            // إذا كان الهدف فارغاً، نتجاوز العملية
             if (!appState.activeGoal || appState.activeGoal.targetAmount <= 0) return;
 
-            // التحقق من الأسابيع السابقة التي انتهت ولم يتم سحب فائضها
             for (let w = 0; w < currentActualWeek; w++) {
-                if (w > 3) continue; // أقصى حد 4 أسابيع
+                if (w > 3) continue; 
                 
                 if (!appState.sweptWeeks.includes(w)) {
-                    // حساب الفائض في نهاية هذا الأسبوع بالتحديد لكل فئة
                     appState.categories.forEach(cat => {
                         const allowanceToWeek = cat.weeklyAllowance * (w + 1);
                         const spentToWeek = appState.transactions
@@ -375,8 +368,8 @@
                         const remainingAtEndOfWeek = allowanceToWeek - spentToWeek - pastSweeps;
 
                         if (remainingAtEndOfWeek > 0) {
-                            const sweepAmount = remainingAtEndOfWeek / 2; // 50% للهدف
-                            const rolloverAmount = remainingAtEndOfWeek - sweepAmount; // 50% تترحل للأسبوع القادم
+                            const sweepAmount = remainingAtEndOfWeek / 2; 
+                            const rolloverAmount = remainingAtEndOfWeek - sweepAmount; 
 
                             appState.sweeps.push({
                                 weekIndex: w,
@@ -397,7 +390,6 @@
 
             if (newlySwept) {
                 saveState();
-                // إظهار رسالة التهنئة بالادخار التلقائي
                 const msg = `<b>عمل رائع!</b><br><br>انتهى الأسبوع وتم تقسيم الفائض كالتالي:<br><br>🎯 <span class="text-green-600 font-bold">+${totalSweptThisTime.toFixed(2)} د.ك</span> أُضيفت لهدفك (${appState.activeGoal.name}).<br><br>💰 <span class="text-blue-600 font-bold">+${totalRolloverThisTime.toFixed(2)} د.ك</span> رُحّلت كرصيد إضافي لأسبوعك الجديد.`;
                 showModal("انتهى الأسبوع ⏳", msg, false, null, null);
             }
@@ -499,7 +491,6 @@
             }
             err.classList.add('hidden');
 
-            // تجهيز الهدف
             const goalName = document.getElementById('input-goal-name').value || 'الهدف';
             const goalTarget = parseFloat(document.getElementById('input-goal-target').value) || 0;
 
@@ -514,11 +505,9 @@
             appState.categories = cats;
             appState.cycleActive = true; 
             
-            // إعادة ضبط محرك الادخار لدورة جديدة
             appState.sweeps = [];
             appState.sweptWeeks = [];
             
-            // إذا كان المستخدم قد قام بتغيير بيانات الهدف، نحتفظ بالرصيد القديم
             let oldGoalBalance = (appState.activeGoal && appState.activeGoal.currentBalance) ? appState.activeGoal.currentBalance : 0;
             appState.activeGoal = {
                 name: goalName,
@@ -577,7 +566,6 @@
                 }
             }
 
-            // عرض بطاقة الهدف إذا كان مفعلاً
             const goalCard = document.getElementById('goal-card');
             if (appState.activeGoal && appState.activeGoal.targetAmount > 0) {
                 goalCard.classList.remove('hidden');
@@ -612,7 +600,6 @@
                     }
                 });
 
-                // تصفية المبالغ التي تم سحبها للهدف لهذه الفئة لتخصم من الترحيل
                 const pastSweeps = (appState.sweeps || [])
                     .filter(s => s.catId.toString() === cat.id.toString() && s.weekIndex < activeWeekIndex)
                     .reduce((sum, s) => sum + s.amount, 0);
@@ -631,13 +618,14 @@
                 
                 const style = catStyles[index % catStyles.length];
                 
-                let rolloverStr = '';
+                // التحكم بظهور عبارة الرصيد الإضافي أو إخفائها
+                let rolloverHtml = '';
                 if (catRollover > 0) {
-                    rolloverStr = `رصيد إضافي: +${catRollover.toFixed(2)}`;
+                    rolloverHtml = `<span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers">رصيد إضافي: <span dir="ltr">+${catRollover.toFixed(2)}</span></span>`;
                 } else if (catRollover < 0) {
-                    rolloverStr = `عجز مرحل: ${catRollover.toFixed(2)}`;
+                    rolloverHtml = `<span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers">عجز مرحل: <span dir="ltr">${catRollover.toFixed(2)}</span></span>`;
                 } else {
-                    rolloverStr = `رصيد إضافي: 0.00`;
+                    rolloverHtml = ``; // تم تفريغ العبارة في حال عدم وجود فائض أو عجز
                 }
 
                 let warningHtml = '';
@@ -655,7 +643,7 @@
                 tile.innerHTML = `
                     <span class="text-sm font-bold block w-full text-center mb-2">${cat.name}</span>
                     <span class="text-4xl block w-full text-center force-english-numbers">${formatMoneyHTML(catCurrentBal)}</span>
-                    <span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers">${rolloverStr}</span>
+                    ${rolloverHtml}
                     <span class="text-[10px] font-bold block w-full text-center opacity-80 mt-1 force-english-numbers bg-black/10 rounded px-1 py-0.5">متوسط الصرف: ${avgWeeklySpend.toFixed(2)}</span>
                     ${warningHtml}
                 `;
@@ -905,7 +893,6 @@
                     addDeductibleRowToDOM('التزامات سابقة', appState.fixedTotal);
                 }
                 
-                // تجهيز هدف الإدخار
                 if(appState.activeGoal) {
                     document.getElementById('input-goal-name').value = appState.activeGoal.name || '';
                     document.getElementById('input-goal-target').value = appState.activeGoal.targetAmount || '';
