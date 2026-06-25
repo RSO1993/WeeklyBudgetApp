@@ -178,10 +178,17 @@
         <div id="vault-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
                 <h2 class="text-lg text-stone-300 mb-1">إجمالي التوفير</h2>
-                <div class="text-4xl font-bold text-green-400 force-english-numbers mb-2" id="vault-total-saved">0.00</div>
-                <div class="text-xs text-stone-400 border-t border-stone-600 pt-2 mx-8 mt-2">
-                    إجمالي مصروفات جميع الدورات السابقة: 
-                    <span id="vault-all-time-spent" class="font-bold text-red-400 force-english-numbers ml-1">0.00</span>
+                <div class="text-4xl font-bold text-green-400 force-english-numbers mb-3" id="vault-total-saved">0.00</div>
+                <div class="flex justify-evenly text-xs text-stone-400 border-t border-stone-600 pt-4 mt-2">
+                    <div>
+                        إجمالي المصروفات
+                        <div id="vault-all-time-spent" class="font-bold text-red-400 force-english-numbers mt-1">0.00</div>
+                    </div>
+                    <div class="w-px bg-stone-600"></div>
+                    <div>
+                        متوسط الصرف
+                        <div id="vault-avg-spend" class="font-bold text-orange-400 force-english-numbers mt-1">0.00</div>
+                    </div>
                 </div>
             </div>
             
@@ -608,24 +615,19 @@
                 const catRollover = allowancePreviousWeeks - spentPreviousWeeks - pastSweeps;
                 const catCurrentBal = cat.weeklyAllowance + catRollover - spentThisWeek;
                 
-                let catTotalSpentSoFar = spentPreviousWeeks + spentThisWeek;
-                let weeksElapsedForAvg = activeWeekIndex + 1;
-                let avgWeeklySpend = catTotalSpentSoFar / weeksElapsedForAvg;
-
                 totalWeeklyBudget += cat.weeklyAllowance;
                 totalRollover += catRollover;
                 totalRemainingThisWeek += catCurrentBal;
                 
                 const style = catStyles[index % catStyles.length];
                 
-                // التحكم بظهور عبارة الرصيد الإضافي أو إخفائها
                 let rolloverHtml = '';
                 if (catRollover > 0) {
                     rolloverHtml = `<span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers">رصيد إضافي: <span dir="ltr">+${catRollover.toFixed(2)}</span></span>`;
                 } else if (catRollover < 0) {
                     rolloverHtml = `<span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers">عجز مرحل: <span dir="ltr">${catRollover.toFixed(2)}</span></span>`;
                 } else {
-                    rolloverHtml = ``; // تم تفريغ العبارة في حال عدم وجود فائض أو عجز
+                    rolloverHtml = ``; 
                 }
 
                 let warningHtml = '';
@@ -644,7 +646,6 @@
                     <span class="text-sm font-bold block w-full text-center mb-2">${cat.name}</span>
                     <span class="text-4xl block w-full text-center force-english-numbers">${formatMoneyHTML(catCurrentBal)}</span>
                     ${rolloverHtml}
-                    <span class="text-[10px] font-bold block w-full text-center opacity-80 mt-1 force-english-numbers bg-black/10 rounded px-1 py-0.5">متوسط الصرف: ${avgWeeklySpend.toFixed(2)}</span>
                     ${warningHtml}
                 `;
                 
@@ -764,6 +765,16 @@
             let totalAllTimeSpent = (appState.allTimeSpent || 0) + currentCycleSpent;
             document.getElementById('vault-all-time-spent').innerHTML = formatMoneyHTML(totalAllTimeSpent);
 
+            // حساب متوسط صرف الدورة
+            let cyclesCount = (appState.history ? appState.history.length : 0);
+            if (appState.cycleActive) cyclesCount += 1;
+            let avgCycleSpend = cyclesCount > 0 ? (totalAllTimeSpent / cyclesCount) : 0;
+            
+            const avgSpendEl = document.getElementById('vault-avg-spend');
+            if(avgSpendEl) {
+                avgSpendEl.innerHTML = formatMoneyHTML(avgCycleSpend);
+            }
+
             renderAllocations();
 
             if (appState.cycleActive === false) {
@@ -855,7 +866,6 @@
             });
         }
 
-        // تسجيل الـ Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(registration => {
