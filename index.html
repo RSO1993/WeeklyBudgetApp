@@ -45,6 +45,7 @@
 
     <div id="app-container" class="w-full max-w-lg bg-white shadow-xl min-h-screen flex flex-col relative overflow-hidden">
         
+        <!-- صفحة الإعدادات -->
         <div id="setup-view" class="flex-1 p-6 overflow-y-auto hidden">
             <div class="mb-6 border-b border-stone-200 pb-4 flex justify-between items-center">
                 <h1 class="text-3xl font-bold text-stone-800 mb-1">⚙️ إعداد الميزانية</h1>
@@ -124,7 +125,7 @@
                 </div>
                 
                 <div id="week-countdown" class="text-center text-sm font-bold text-stone-300 mt-4 px-4 force-english-numbers bg-stone-700/50 mx-4 py-2 rounded-xl">
-                    </div>
+                </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-4 bg-stone-50 z-0">
@@ -144,6 +145,9 @@
                     </div>
                 </div>
 
+                <!-- شريط التسوية الذكية المضاف حديثاً -->
+                <div id="reallocation-banner-container" class="mb-5 hidden"></div>
+
                 <div id="goal-card" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 mb-6 hidden">
                     <div class="flex justify-between items-end mb-2">
                         <div>
@@ -162,7 +166,7 @@
 
                 <p class="text-xs text-stone-400 font-bold text-center mb-3">اضغط على أي فئة لتسجيل مصروف 💸</p>
                 <div class="grid grid-cols-2 gap-4 mb-8" id="tiles-grid">
-                    </div>
+                </div>
 
             </div>
         </div>
@@ -350,6 +354,81 @@
             }
             attachListeners();
         }
+
+        // --- دالة التسوية الذكية للميزانية ---
+        window.handleReallocation = function() {
+            let currentDeficit = 0;
+            let currentSurplus = 0;
+            let nCats = [];
+            let pCats = [];
+
+            // تجميع الأرصدة الحالية للتحقق من المبالغ الدقيقة قبل التسوية
+            appState.categories.forEach(cat => {
+                let spentPreviousWeeks = 0;
+                let spentThisWeek = 0;
+
+                appState.transactions.forEach(tx => {
+                    if (tx.catId.toString() === cat.id.toString()) {
+                        if (tx.weekIndex < activeWeekIndex) spentPreviousWeeks += tx.amount;
+                        else if (tx.weekIndex === activeWeekIndex) spentThisWeek += tx.amount;
+                    }
+                });
+
+                const pastSweeps = (appState.sweeps || [])
+                    .filter(s => s.catId.toString() === cat.id.toString() && s.weekIndex < activeWeekIndex)
+                    .reduce((sum, s) => sum + s.amount, 0);
+
+                const allowancePreviousWeeks = cat.weeklyAllowance * activeWeekIndex;
+                const catRollover = allowancePreviousWeeks - spentPreviousWeeks - pastSweeps;
+                const catCurrentBal = cat.weeklyAllowance + catRollover - spentThisWeek;
+
+                if (catCurrentBal < -0.005) {
+                    nCats.push({ id: cat.id, name: cat.name, deficit: Math.abs(catCurrentBal) });
+                    currentDeficit += Math.abs(catCurrentBal);
+                } else if (catCurrentBal > 0.005) {
+                    pCats.push({ id: cat.id, name: cat.name, surplus: catCurrentBal });
+                    currentSurplus += catCurrentBal;
+                }
+            });
+
+            if (currentDeficit > 0 && currentSurplus >= currentDeficit) {
+                const msg = `سيتم سحب <b>${currentDeficit.toFixed(2)} د.ك</b> من الفئات المتبقية لتغطية العجز وتصفير الأظرف السالبة (بشكل متناسب).<br><br>هل أنت متأكد؟`;
+                showModal("تسوية ذكية ⚖️", msg, false, null, (confirmed) => {
+                    if (!confirmed) return;
+
+                    // 1. إضافة الرصيد للفئات الخاسرة (كمصروف سالب) لتصفيرها
+                    nCats.forEach(nc => {
+                        appState.transactions.push({
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                            timestamp: Date.now(),
+                            amount: -nc.deficit, // إضافة مبلغ
+                            catId: nc.id.toString(),
+                            weekIndex: activeWeekIndex,
+                            isReallocation: true
+                        });
+                    });
+
+                    // 2. خصم الرصيد من الفئات الرابحة بشكل متناسب (Proportional Deduction)
+                    pCats.forEach(pc => {
+                        const proportion = pc.surplus / currentSurplus;
+                        const deduction = currentDeficit * proportion;
+
+                        appState.transactions.push({
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                            timestamp: Date.now(),
+                            amount: deduction, // خصم مبلغ
+                            catId: pc.id.toString(),
+                            weekIndex: activeWeekIndex,
+                            isReallocation: true
+                        });
+                    });
+
+                    showToast("تمت تسوية الميزانية بنجاح!");
+                    saveState();
+                    renderDashboard();
+                });
+            }
+        };
 
         function checkAutoSweep(currentActualWeek) {
             let newlySwept = false;
@@ -592,6 +671,10 @@
             let totalWeeklyBudget = 0;
             let totalRollover = 0;
             let totalRemainingThisWeek = 0;
+            
+            // متغيرات لتجميع العجز والفائض بهدف التسوية الذكية
+            let totalDeficit = 0;
+            let totalSurplus = 0;
 
             const tilesGrid = document.getElementById('tiles-grid');
             tilesGrid.innerHTML = '';
@@ -619,24 +702,22 @@
                 totalRollover += catRollover;
                 totalRemainingThisWeek += catCurrentBal;
                 
+                // حساب العجز والفائض للتسوية
+                if (catCurrentBal < -0.005) {
+                    totalDeficit += Math.abs(catCurrentBal);
+                } else if (catCurrentBal > 0.005) {
+                    totalSurplus += catCurrentBal;
+                }
+
                 const style = catStyles[index % catStyles.length];
                 
                 let rolloverHtml = '';
-                if (catRollover > 0) {
+                if (catRollover > 0.005) {
                     rolloverHtml = `<span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers">رصيد إضافي: <span dir="ltr">+${catRollover.toFixed(2)}</span></span>`;
-                } else if (catRollover < 0) {
-                    rolloverHtml = `<span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers">عجز مرحل: <span dir="ltr">${catRollover.toFixed(2)}</span></span>`;
+                } else if (catRollover < -0.005) {
+                    rolloverHtml = `<span class="text-[11px] font-bold block w-full text-center opacity-90 mt-2 force-english-numbers text-red-100">عجز مرحل: <span dir="ltr">${catRollover.toFixed(2)}</span></span>`;
                 } else {
                     rolloverHtml = ``; 
-                }
-
-                let warningHtml = '';
-                if (catCurrentBal < 0) {
-                    if (activeWeekIndex < 3) {
-                        warningHtml = `<span class="text-[10px] font-bold block w-full text-center bg-black/20 text-white mt-2 rounded py-1">⚠️ سحب من الأسبوع القادم</span>`;
-                    } else {
-                        warningHtml = `<span class="text-[10px] font-bold block w-full text-center bg-black/20 text-white mt-2 rounded py-1">⚠️ تجاوز ميزانية الشهر</span>`;
-                    }
                 }
 
                 const tile = document.createElement('button');
@@ -646,7 +727,6 @@
                     <span class="text-sm font-bold block w-full text-center mb-2">${cat.name}</span>
                     <span class="text-4xl block w-full text-center force-english-numbers">${formatMoneyHTML(catCurrentBal)}</span>
                     ${rolloverHtml}
-                    ${warningHtml}
                 `;
                 
                 tile.onclick = () => {
@@ -671,6 +751,29 @@
                 
                 tilesGrid.appendChild(tile);
             });
+
+            // عرض شريط التسوية الذكية إذا كان هناك عجز
+            const reallocContainer = document.getElementById('reallocation-banner-container');
+            if (totalDeficit > 0.005) {
+                reallocContainer.classList.remove('hidden');
+                if (totalSurplus >= totalDeficit) {
+                    reallocContainer.innerHTML = `
+                        <div class="bg-orange-100 border border-orange-300 text-orange-800 p-3 rounded-xl flex justify-between items-center shadow-sm">
+                            <div class="text-xs font-bold">⚠️ عجز مجمع: <span dir="ltr">${totalDeficit.toFixed(2)}</span> د.ك</div>
+                            <button onclick="handleReallocation()" class="bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-bold py-1.5 px-3 rounded-lg transition shadow-sm">تسوية ذكية ⚖️</button>
+                        </div>
+                    `;
+                } else {
+                    reallocContainer.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl shadow-sm text-center">
+                            <div class="text-[11px] font-bold leading-relaxed">⚠️ لديك عجز بقيمة <span dir="ltr">${totalDeficit.toFixed(2)}</span> د.ك<br><span class="text-red-600 font-normal">الفائض في الفئات الأخرى لا يكفي لتسويته!</span></div>
+                        </div>
+                    `;
+                }
+            } else {
+                reallocContainer.classList.add('hidden');
+                reallocContainer.innerHTML = '';
+            }
 
             document.getElementById('display-weekly-budget').innerHTML = formatMoneyHTML(totalWeeklyBudget);
             
@@ -703,15 +806,30 @@
                 const d = new Date(tx.timestamp);
                 const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
                 
+                // تمييز حركات التسوية
+                const isRealloc = tx.isReallocation;
+                const catNameHtml = isRealloc 
+                    ? `${cat.name} <span class="text-[9px] text-orange-600 bg-orange-100 border border-orange-200 px-1.5 py-0.5 rounded-full mr-1">تسوية</span>`
+                    : cat.name;
+
+                let amountHtml = '';
+                if (isRealloc) {
+                    amountHtml = tx.amount < 0 
+                        ? `<span class="text-green-500">+${Math.abs(tx.amount).toFixed(2)}</span>` 
+                        : `<span class="text-orange-500">-${tx.amount.toFixed(2)}</span>`;
+                } else {
+                    amountHtml = `<span class="text-red-500">-${tx.amount.toFixed(2)}</span>`;
+                }
+
                 const div = document.createElement('div');
                 div.className = 'bg-white p-4 rounded-xl shadow-sm border border-stone-100 flex justify-between items-center mb-3 force-english-numbers';
                 div.innerHTML = `
                     <div>
-                        <div class="font-bold text-stone-800" style="font-family:'Cairo'">${cat.name} <span class="text-xs text-stone-400 font-normal mr-2 bg-stone-100 px-2 py-0.5 rounded-full">أسبوع ${tx.weekIndex + 1}</span></div>
+                        <div class="font-bold text-stone-800" style="font-family:'Cairo'">${catNameHtml} <span class="text-xs text-stone-400 font-normal mr-2 bg-stone-100 px-2 py-0.5 rounded-full">أسبوع ${tx.weekIndex + 1}</span></div>
                         <div class="text-xs text-stone-500 mt-1 force-english-numbers">${dateStr}</div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="font-bold text-lg text-red-500 ml-2">-${tx.amount.toFixed(2)}</div>
+                        <div class="font-bold text-lg ml-2" dir="ltr">${amountHtml}</div>
                         <button class="text-stone-400 hover:text-stone-700 p-1 bg-stone-100 rounded btn-del" data-id="${tx.id}">🗑️</button>
                     </div>
                 `;
