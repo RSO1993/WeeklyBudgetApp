@@ -171,10 +171,19 @@
             </div>
         </div>
 
+        <!-- شاشة السجل المحدثة لتدعم الفصل بين المصروفات والتسويات -->
         <div id="transactions-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
-            <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 flex justify-between items-center">
-                <h2 class="text-xl font-bold">📋 سجل العمليات</h2>
-                <button id="btn-close-logs" class="text-sm bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded-lg transition font-bold">رجوع</button>
+            <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold">📋 سجل العمليات</h2>
+                    <button id="btn-close-logs" class="text-sm bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded-lg transition font-bold">رجوع</button>
+                </div>
+                
+                <!-- تبويبات الفصل داخل السجل -->
+                <div class="flex bg-stone-700 rounded-xl p-1">
+                    <button id="tab-log-expenses" class="flex-1 py-2 rounded-lg text-sm font-bold bg-white text-stone-800 shadow transition">المصروفات</button>
+                    <button id="tab-log-realloc" class="flex-1 py-2 rounded-lg text-sm font-bold text-stone-300 hover:text-white transition">التسويات الذكية</button>
+                </div>
             </div>
             <div class="flex-1 overflow-y-auto p-6" id="transactions-list"></div>
         </div>
@@ -242,6 +251,7 @@
         let appState = null;
         let activeWeekIndex = 0;
         let modalCallback = null;
+        let activeLogTab = 'expenses'; // المتغير الجديد للتحكم بتصنيف السجل
 
         const catStyles = [
             { tile: 'bg-orange-400 text-white border-orange-500', hex: '#fb923c' },
@@ -362,7 +372,6 @@
             let nCats = [];
             let pCats = [];
 
-            // تجميع الأرصدة الحالية للتحقق من المبالغ الدقيقة قبل التسوية
             appState.categories.forEach(cat => {
                 let spentPreviousWeeks = 0;
                 let spentThisWeek = 0;
@@ -396,7 +405,6 @@
                 showModal("تسوية ذكية ⚖️", msg, false, null, (confirmed) => {
                     if (!confirmed) return;
 
-                    // 1. إضافة الرصيد للفئات الخاسرة (كمصروف سالب) لتصفيرها
                     nCats.forEach(nc => {
                         appState.transactions.push({
                             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
@@ -408,7 +416,6 @@
                         });
                     });
 
-                    // 2. خصم الرصيد من الفئات الرابحة بشكل متناسب (Proportional Deduction)
                     pCats.forEach(pc => {
                         const proportion = pc.surplus / currentSurplus;
                         const deduction = currentDeficit * proportion;
@@ -672,7 +679,6 @@
             let totalRollover = 0;
             let totalRemainingThisWeek = 0;
             
-            // متغيرات لتجميع العجز والفائض بهدف التسوية الذكية
             let totalDeficit = 0;
             let totalSurplus = 0;
 
@@ -702,7 +708,6 @@
                 totalRollover += catRollover;
                 totalRemainingThisWeek += catCurrentBal;
                 
-                // حساب العجز والفائض للتسوية
                 if (catCurrentBal < -0.005) {
                     totalDeficit += Math.abs(catCurrentBal);
                 } else if (catCurrentBal > 0.005) {
@@ -752,7 +757,6 @@
                 tilesGrid.appendChild(tile);
             });
 
-            // عرض شريط التسوية الذكية إذا كان هناك عجز
             const reallocContainer = document.getElementById('reallocation-banner-container');
             if (totalDeficit > 0.005) {
                 reallocContainer.classList.remove('hidden');
@@ -786,27 +790,42 @@
             globalRemainingEl.className = `text-lg font-bold force-english-numbers ${totalRemainingThisWeek >= 0 ? 'text-orange-500' : 'text-red-500'}`;
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast-message');
-            toast.innerText = msg;
-            toast.classList.remove('opacity-0', 'translate-y-4');
-            if(window.toastTimer) clearTimeout(window.toastTimer);
-            window.toastTimer = setTimeout(() => { 
-                toast.classList.add('opacity-0', 'translate-y-4'); 
-            }, 3000);
-        }
-
+        // --- دالة الفلترة لتبويبات السجل ---
         function renderTransactionsList() {
+            // 1. تحديث شكل التبويبات بناءً على الاختيار
+            const btnExp = document.getElementById('tab-log-expenses');
+            const btnRealloc = document.getElementById('tab-log-realloc');
+            
+            if (activeLogTab === 'expenses') {
+                btnExp.className = 'flex-1 py-2 rounded-lg text-sm font-bold bg-white text-stone-800 shadow transition';
+                btnRealloc.className = 'flex-1 py-2 rounded-lg text-sm font-bold text-stone-300 hover:text-white transition';
+            } else {
+                btnRealloc.className = 'flex-1 py-2 rounded-lg text-sm font-bold bg-white text-stone-800 shadow transition';
+                btnExp.className = 'flex-1 py-2 rounded-lg text-sm font-bold text-stone-300 hover:text-white transition';
+            }
+
             const listEl = document.getElementById('transactions-list');
             listEl.innerHTML = '';
             
-            const sortedTx = [...appState.transactions].sort((a, b) => b.timestamp - a.timestamp);
+            // 2. فلترة السجلات بناءً على التبويب النشط
+            const filteredTx = appState.transactions.filter(tx => {
+                if (activeLogTab === 'expenses') return !tx.isReallocation;
+                if (activeLogTab === 'realloc') return tx.isReallocation;
+                return true;
+            });
+
+            if (filteredTx.length === 0) {
+                listEl.innerHTML = `<div class="text-center text-stone-400 text-sm mt-10 font-bold">لا توجد سجلات في هذا القسم</div>`;
+                return;
+            }
+
+            const sortedTx = [...filteredTx].sort((a, b) => b.timestamp - a.timestamp);
+            
             sortedTx.forEach(tx => {
                 const cat = appState.categories.find(c => c.id.toString() === tx.catId.toString()) || { name: 'فئة محذوفة' };
                 const d = new Date(tx.timestamp);
                 const dateStr = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
                 
-                // تمييز حركات التسوية
                 const isRealloc = tx.isReallocation;
                 const catNameHtml = isRealloc 
                     ? `${cat.name} <span class="text-[9px] text-orange-600 bg-orange-100 border border-orange-200 px-1.5 py-0.5 rounded-full mr-1">تسوية</span>`
@@ -998,7 +1017,6 @@
 
         function attachListeners() {
             document.getElementById('btn-add-deductible').onclick = () => addDeductibleRowToDOM();
-            
             document.getElementById('btn-add-category').onclick = () => { addCategoryRowToDOM(null, '', 0); };
 
             document.getElementById('btn-add-allocation').onclick = () => {
@@ -1063,6 +1081,16 @@
             document.querySelectorAll('.week-tab').forEach(btn => {
                 btn.onclick = (e) => { activeWeekIndex = parseInt(e.target.dataset.week); renderDashboard(); };
             });
+
+            // التحكم في تبويبات السجل (المصروفات والتسويات)
+            document.getElementById('tab-log-expenses').onclick = () => {
+                activeLogTab = 'expenses';
+                renderTransactionsList();
+            };
+            document.getElementById('tab-log-realloc').onclick = () => {
+                activeLogTab = 'realloc';
+                renderTransactionsList();
+            };
         }
 
         window.addEventListener('DOMContentLoaded', initApp);
