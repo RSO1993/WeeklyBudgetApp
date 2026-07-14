@@ -145,7 +145,7 @@
                     </div>
                 </div>
 
-                <!-- شريط التسوية الذكية المضاف حديثاً -->
+                <!-- شريط التسوية الذكية -->
                 <div id="reallocation-banner-container" class="mb-5 hidden"></div>
 
                 <div id="goal-card" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 mb-6 hidden">
@@ -171,7 +171,7 @@
             </div>
         </div>
 
-        <!-- شاشة السجل المحدثة لتدعم الفصل بين المصروفات والتسويات -->
+        <!-- شاشة السجل -->
         <div id="transactions-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 flex flex-col gap-4">
                 <div class="flex justify-between items-center">
@@ -188,6 +188,7 @@
             <div class="flex-1 overflow-y-auto p-6" id="transactions-list"></div>
         </div>
 
+        <!-- شاشة القبو والمحفظة -->
         <div id="vault-view" class="flex-1 flex flex-col hidden h-full bg-stone-50">
             <div class="bg-stone-800 text-white p-6 rounded-b-3xl shadow-md z-10 text-center">
                 <h2 class="text-lg text-stone-300 mb-1">إجمالي التوفير</h2>
@@ -199,7 +200,7 @@
                     </div>
                     <div class="w-px bg-stone-600"></div>
                     <div>
-                        متوسط الصرف
+                        متوسط الصرف (العام)
                         <div id="vault-avg-spend" class="font-bold text-orange-400 force-english-numbers mt-1">0.00</div>
                     </div>
                 </div>
@@ -208,6 +209,14 @@
             <div class="flex-1 overflow-y-auto p-4">
                 <button id="btn-vault-back" class="w-full bg-stone-200 text-stone-800 font-bold py-3 rounded-xl mb-4 hover:bg-stone-300 transition">العودة للميزانية الحالية</button>
                 <button id="btn-start-new-cycle" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg mb-6 hover:bg-blue-700 transition hidden text-lg border-2 border-blue-500">بدء دورة جديدة 🚀</button>
+
+                <!-- قسم متوسط الصرف لكل فئة (الجديد) -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 mb-6">
+                    <h3 class="font-bold text-stone-800 text-lg mb-4">📊 متوسط الصرف الأسبوعي (للفئات)</h3>
+                    <div id="vault-category-averages" class="grid grid-cols-2 gap-3">
+                        <!-- سيتم تعبئتها ديناميكياً من الجافاسكريبت -->
+                    </div>
+                </div>
 
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 mb-6">
                     <div class="flex justify-between items-center mb-4">
@@ -792,7 +801,6 @@
 
         // --- دالة الفلترة لتبويبات السجل ---
         function renderTransactionsList() {
-            // 1. تحديث شكل التبويبات بناءً على الاختيار
             const btnExp = document.getElementById('tab-log-expenses');
             const btnRealloc = document.getElementById('tab-log-realloc');
             
@@ -807,7 +815,6 @@
             const listEl = document.getElementById('transactions-list');
             listEl.innerHTML = '';
             
-            // 2. فلترة السجلات بناءً على التبويب النشط
             const filteredTx = appState.transactions.filter(tx => {
                 if (activeLogTab === 'expenses') return !tx.isReallocation;
                 if (activeLogTab === 'realloc') return tx.isReallocation;
@@ -897,12 +904,14 @@
             
             let currentCycleSpent = 0;
             if (appState.cycleActive) {
-                currentCycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+                // استبعاد التسويات من حسبة إجمالي المصروفات العام
+                currentCycleSpent = appState.transactions
+                    .filter(tx => !tx.isReallocation)
+                    .reduce((sum, tx) => sum + tx.amount, 0);
             }
             let totalAllTimeSpent = (appState.allTimeSpent || 0) + currentCycleSpent;
             document.getElementById('vault-all-time-spent').innerHTML = formatMoneyHTML(totalAllTimeSpent);
 
-            // حساب متوسط صرف الدورة
             let cyclesCount = (appState.history ? appState.history.length : 0);
             if (appState.cycleActive) cyclesCount += 1;
             let avgCycleSpend = cyclesCount > 0 ? (totalAllTimeSpent / cyclesCount) : 0;
@@ -910,6 +919,31 @@
             const avgSpendEl = document.getElementById('vault-avg-spend');
             if(avgSpendEl) {
                 avgSpendEl.innerHTML = formatMoneyHTML(avgCycleSpend);
+            }
+
+            // --- بناء قسم متوسط الصرف لكل فئة ديناميكياً ---
+            const catAveragesEl = document.getElementById('vault-category-averages');
+            catAveragesEl.innerHTML = '';
+            
+            if (appState.cycleActive) {
+                let weeksElapsed = activeWeekIndex + 1;
+                appState.categories.forEach(cat => {
+                    // استبعاد التسويات للحصول على الصرف الحقيقي
+                    let catSpent = appState.transactions
+                        .filter(tx => tx.catId.toString() === cat.id.toString() && !tx.isReallocation)
+                        .reduce((sum, tx) => sum + tx.amount, 0);
+                    let avg = catSpent / weeksElapsed;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'bg-stone-50 p-3 rounded-xl border border-stone-100 flex flex-col items-center justify-center';
+                    div.innerHTML = `
+                        <span class="text-xs font-bold text-stone-500 mb-1">${cat.name}</span>
+                        <span class="text-lg font-bold text-stone-800 force-english-numbers">${formatMoneyHTML(avg)}</span>
+                    `;
+                    catAveragesEl.appendChild(div);
+                });
+            } else {
+                catAveragesEl.innerHTML = '<div class="col-span-2 text-stone-400 text-sm text-center py-2">ابدأ دورة جديدة لعرض المتوسطات</div>';
             }
 
             renderAllocations();
@@ -981,7 +1015,9 @@
                 if (!appState.history) appState.history = [];
 
                 const totalAllowance = appState.salary - appState.fixedTotal;
-                const cycleSpent = appState.transactions.reduce((sum, tx) => sum + tx.amount, 0);
+                const cycleSpent = appState.transactions
+                    .filter(tx => !tx.isReallocation)
+                    .reduce((sum, tx) => sum + tx.amount, 0);
                 const cycleSaved = totalAllowance - cycleSpent;
 
                 appState.allTimeSpent = (appState.allTimeSpent || 0) + cycleSpent;
@@ -1082,7 +1118,6 @@
                 btn.onclick = (e) => { activeWeekIndex = parseInt(e.target.dataset.week); renderDashboard(); };
             });
 
-            // التحكم في تبويبات السجل (المصروفات والتسويات)
             document.getElementById('tab-log-expenses').onclick = () => {
                 activeLogTab = 'expenses';
                 renderTransactionsList();
