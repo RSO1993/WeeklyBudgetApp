@@ -19,13 +19,12 @@
             color: #292524;
         }
 
-        /* لفرض الأرقام الإنجليزية دائماً */
-        .force-english-numbers, input[type="number"] {
+        .force-english-numbers, input[type="text"], input[type="number"] {
             font-family: system-ui, -apple-system, sans-serif !important;
             direction: ltr;
         }
         
-        input[type="number"] { text-align: center; }
+        input { text-align: center; }
 
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
@@ -39,7 +38,7 @@
 </head>
 <body class="flex justify-center min-h-screen selection:bg-stone-200 relative">
 
-    <div id="toast-message" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full shadow-2xl text-sm font-bold transition-all duration-300 opacity-0 pointer-events-none z-50 force-english-numbers translate-y-4">
+    <div id="toast-message" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full shadow-2xl text-sm font-bold transition-all duration-300 opacity-0 pointer-events-none z-[110] force-english-numbers translate-y-4">
         تم تسجيل العملية بنجاح
     </div>
 
@@ -145,7 +144,6 @@
                     </div>
                 </div>
 
-                <!-- شريط التسوية الذكية -->
                 <div id="reallocation-banner-container" class="mb-5 hidden"></div>
 
                 <div id="goal-card" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 mb-6 hidden">
@@ -179,7 +177,6 @@
                     <button id="btn-close-logs" class="text-sm bg-stone-700 hover:bg-stone-600 px-4 py-2 rounded-lg transition font-bold">رجوع</button>
                 </div>
                 
-                <!-- تبويبات الفصل داخل السجل -->
                 <div class="flex bg-stone-700 rounded-xl p-1">
                     <button id="tab-log-expenses" class="flex-1 py-2 rounded-lg text-sm font-bold bg-white text-stone-800 shadow transition">المصروفات</button>
                     <button id="tab-log-realloc" class="flex-1 py-2 rounded-lg text-sm font-bold text-stone-300 hover:text-white transition">التسويات الذكية</button>
@@ -214,7 +211,6 @@
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200 mb-6">
                     <h3 class="font-bold text-stone-800 text-lg mb-4">📊 متوسط الصرف الأسبوعي (للفئات)</h3>
                     <div id="vault-category-averages" class="grid grid-cols-2 gap-3">
-                        <!-- سيتم تعبئتها ديناميكياً من الجافاسكريبت -->
                     </div>
                 </div>
 
@@ -241,14 +237,16 @@
             </div>
         </div>
 
-        <div id="custom-modal" class="absolute inset-0 bg-stone-900 bg-opacity-60 hidden flex justify-center items-center z-50 p-4 transition-opacity">
+        <!-- تم تحديث النافذة المنبثقة هنا لحل مشكلة عدم القدرة على النقر -->
+        <div id="custom-modal" class="fixed inset-0 bg-stone-900 bg-opacity-60 hidden flex justify-center items-center z-[100] p-4 transition-opacity">
             <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm transform transition-transform scale-100">
                 <h3 id="modal-title" class="text-xl font-bold text-stone-800 mb-2"></h3>
                 <div id="modal-message" class="text-sm text-stone-600 mb-4 hidden leading-relaxed"></div>
-                <input type="number" id="modal-input" inputmode="decimal" class="w-full p-4 border border-stone-300 rounded-xl mb-4 hidden force-english-numbers focus:outline-none focus:ring-2 focus:ring-teal-500 text-2xl" placeholder="0.00">
+                <!-- التغيير إلى type="text" يمنع مشاكل القراءة في لوحات المفاتيح التي تستخدم الفاصلة -->
+                <input type="text" id="modal-input" inputmode="decimal" class="w-full p-4 border border-stone-300 rounded-xl mb-4 hidden force-english-numbers text-center focus:outline-none focus:ring-2 focus:ring-teal-500 text-2xl" placeholder="0.00">
                 <div class="flex gap-3 mt-2">
-                    <button id="btn-modal-confirm" class="flex-1 bg-teal-600 text-white font-bold py-3 rounded-xl hover:bg-teal-700 transition">تأكيد</button>
-                    <button id="btn-modal-cancel" class="flex-1 bg-stone-200 text-stone-800 font-bold py-3 rounded-xl hover:bg-stone-300 transition">إلغاء</button>
+                    <button type="button" id="btn-modal-confirm" class="flex-1 bg-teal-600 text-white font-bold py-3 rounded-xl hover:bg-teal-700 transition">تأكيد</button>
+                    <button type="button" id="btn-modal-cancel" class="flex-1 bg-stone-200 text-stone-800 font-bold py-3 rounded-xl hover:bg-stone-300 transition">إلغاء</button>
                 </div>
             </div>
         </div>
@@ -260,7 +258,7 @@
         let appState = null;
         let activeWeekIndex = 0;
         let modalCallback = null;
-        let activeLogTab = 'expenses'; // المتغير الجديد للتحكم بتصنيف السجل
+        let activeLogTab = 'expenses'; 
 
         const catStyles = [
             { tile: 'bg-orange-400 text-white border-orange-500', hex: '#fb923c' },
@@ -302,7 +300,8 @@
             if(isPrompt) { 
                 inputEl.value = defaultValue || ''; 
                 inputEl.classList.remove('hidden'); 
-                setTimeout(() => inputEl.focus(), 50); 
+                inputEl.classList.remove('ring-2', 'ring-red-500'); // تصفير الخطأ
+                setTimeout(() => inputEl.focus(), 100); 
             } else { 
                 inputEl.classList.add('hidden'); 
             }
@@ -311,20 +310,9 @@
 
         function closeModal() {
             document.getElementById('custom-modal').classList.add('hidden');
+            document.getElementById('modal-input').blur(); // إخفاء الكيبورد بشكل آمن
             modalCallback = null;
         }
-
-        document.getElementById('btn-modal-cancel').onclick = () => {
-            if(modalCallback) modalCallback(null);
-            closeModal();
-        };
-
-        document.getElementById('btn-modal-confirm').onclick = () => {
-            const inputEl = document.getElementById('modal-input');
-            const val = inputEl.classList.contains('hidden') ? true : inputEl.value;
-            if(modalCallback) modalCallback(val);
-            closeModal();
-        };
         
         function initApp() {
             const oldSaved = localStorage.getItem('smartEnvelopeBudgetState_Arabic_V1_7');
@@ -374,7 +362,6 @@
             attachListeners();
         }
 
-        // --- دالة التسوية الذكية للميزانية ---
         window.handleReallocation = function() {
             let currentDeficit = 0;
             let currentSurplus = 0;
@@ -418,7 +405,7 @@
                         appState.transactions.push({
                             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                             timestamp: Date.now(),
-                            amount: -nc.deficit, // إضافة مبلغ
+                            amount: -nc.deficit, 
                             catId: nc.id.toString(),
                             weekIndex: activeWeekIndex,
                             isReallocation: true
@@ -432,7 +419,7 @@
                         appState.transactions.push({
                             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                             timestamp: Date.now(),
-                            amount: deduction, // خصم مبلغ
+                            amount: deduction, 
                             catId: pc.id.toString(),
                             weekIndex: activeWeekIndex,
                             isReallocation: true
@@ -745,6 +732,7 @@
                 
                 tile.onclick = () => {
                     showModal("تسجيل مصروف 💸", `المبلغ المخصوم من "${cat.name}":`, true, '', (val) => {
+                        // الحماية الإضافية داخل الـ Callback
                         if (val === null || val === '') return;
                         const amount = parseFloat(val);
                         if (isNaN(amount) || amount <= 0) return;
@@ -799,7 +787,16 @@
             globalRemainingEl.className = `text-lg font-bold force-english-numbers ${totalRemainingThisWeek >= 0 ? 'text-orange-500' : 'text-red-500'}`;
         }
 
-        // --- دالة الفلترة لتبويبات السجل ---
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            if(window.toastTimer) clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => { 
+                toast.classList.add('opacity-0', 'translate-y-4'); 
+            }, 3000);
+        }
+
         function renderTransactionsList() {
             const btnExp = document.getElementById('tab-log-expenses');
             const btnRealloc = document.getElementById('tab-log-realloc');
@@ -904,7 +901,6 @@
             
             let currentCycleSpent = 0;
             if (appState.cycleActive) {
-                // استبعاد التسويات من حسبة إجمالي المصروفات العام
                 currentCycleSpent = appState.transactions
                     .filter(tx => !tx.isReallocation)
                     .reduce((sum, tx) => sum + tx.amount, 0);
@@ -921,14 +917,12 @@
                 avgSpendEl.innerHTML = formatMoneyHTML(avgCycleSpend);
             }
 
-            // --- بناء قسم متوسط الصرف لكل فئة ديناميكياً ---
             const catAveragesEl = document.getElementById('vault-category-averages');
             catAveragesEl.innerHTML = '';
             
             if (appState.cycleActive) {
                 let weeksElapsed = activeWeekIndex + 1;
                 appState.categories.forEach(cat => {
-                    // استبعاد التسويات للحصول على الصرف الحقيقي
                     let catSpent = appState.transactions
                         .filter(tx => tx.catId.toString() === cat.id.toString() && !tx.isReallocation)
                         .reduce((sum, tx) => sum + tx.amount, 0);
@@ -1118,7 +1112,6 @@
                 btn.onclick = (e) => { activeWeekIndex = parseInt(e.target.dataset.week); renderDashboard(); };
             });
 
-            // التحكم في تبويبات السجل (المصروفات والتسويات)
             document.getElementById('tab-log-expenses').onclick = () => {
                 activeLogTab = 'expenses';
                 renderTransactionsList();
@@ -1126,6 +1119,38 @@
             document.getElementById('tab-log-realloc').onclick = () => {
                 activeLogTab = 'realloc';
                 renderTransactionsList();
+            };
+
+            // الروابط الخاصة بالنافذة المنبثقة تم نقلها إلى هنا وتأمينها تماماً
+            document.getElementById('btn-modal-cancel').onclick = () => {
+                if(modalCallback) modalCallback(null);
+                closeModal();
+            };
+
+            document.getElementById('btn-modal-confirm').onclick = () => {
+                const inputEl = document.getElementById('modal-input');
+                let val = inputEl.classList.contains('hidden') ? true : inputEl.value;
+
+                if (!inputEl.classList.contains('hidden')) {
+                    if (typeof val === 'string') {
+                        val = val.replace(',', '.'); // دعم الفاصلة الأوروبية والعربية
+                        const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+                        val = val.replace(/[٠-٩]/g, function(d) {
+                            return arabicNumbers.indexOf(d);
+                        });
+                    }
+                    
+                    const parsedAmount = parseFloat(val);
+                    if (!val || isNaN(parsedAmount) || parsedAmount <= 0) {
+                        inputEl.classList.add('ring-2', 'ring-red-500');
+                        setTimeout(() => inputEl.classList.remove('ring-2', 'ring-red-500'), 500);
+                        return; // لا تغلق النافذة في حال وجود خطأ في الرقم
+                    }
+                    val = parsedAmount; // إرسال الرقم الصافي الموثوق للـ Callback
+                }
+
+                if(modalCallback) modalCallback(val);
+                closeModal();
             };
         }
 
