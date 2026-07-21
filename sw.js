@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-envelope-v2';
+const CACHE_NAME = 'smart-envelope-v3';
 const urlsToCache = [
   './',
   './index.html',
